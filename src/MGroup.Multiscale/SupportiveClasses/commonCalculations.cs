@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -50,5 +50,24 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
             return dot_product;
         }
-    }
+		public static double[] invert2by2(double[,] A, double[] b)
+		{
+			double[,] A_inverse = new double[2, 2] { { A[1, 1], -A[0, 1]   },
+				{-A[1,0], A[0,0]} };
+
+
+
+			double det_A = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0];
+
+			for (int q2 = 0; q2 < 2; q2++)
+			{
+				for (int q1 = 0; q1 < 2; q1++)
+				{ A_inverse[q1, q2] = A_inverse[q1, q2] / det_A; }
+			}
+
+			double[] x = commonCalculations.MatVecMult(A_inverse, b);
+			return x;
+
+		}
+	}
 }
