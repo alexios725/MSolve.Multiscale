@@ -1227,7 +1227,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 						//IElementType e1 = new ContinuumElement3D(elementNodes, InterpolationHexa8.UniqueInstance, GaussLegendre3D.GetQuadratureWithOrder(orderXi: 3, orderEta: 3, orderZeta: 3), material1, CellType.Hexa8),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
 						var elementFactory = new ContinuumElement3DFactory(material1, commonDynamicProperties: null);
 						IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, elementNodes);
-						//e1.ID = ElementID;
+						e1.ID = ElementID;
 						//{
 						//	ID = ElementID
 						//	ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 

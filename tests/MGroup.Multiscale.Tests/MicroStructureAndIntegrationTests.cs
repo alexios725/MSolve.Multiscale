@@ -48,11 +48,11 @@ namespace MGroup.Multiscale.Tests
 			double[] stressesCheck3Expected = PrintUtilities.ReadVector(results_file4);
 			double[] stressesCheck4Expected = PrintUtilities.ReadVector(results_file5);
 
-			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1));
-			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2));
-			Assert.True(BondSlipTest.AreDisplacementsSame(consCheck1, consCheck1Expected));
-			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck3, stressesCheck3Expected));
-			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1, 1E-9));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2, 1E-9));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(consCheck1, consCheck1Expected, 1E-8));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck3, stressesCheck3Expected, 1E-12));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected, 1E-11));//11
 
 		}
 	}

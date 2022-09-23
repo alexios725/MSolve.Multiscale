@@ -184,8 +184,16 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             }
             else
             {
-                solver.LinearSystem.RhsVector.Clear(); //TODO Ger Temporary fix add watch
-                provider.Reset();
+				if (!(solver.LinearSystem.RhsVector is null))
+				{
+					solver.LinearSystem.RhsVector.Clear();
+					if (!(PeviousResidual is null))
+					{
+						solver.LinearSystem.RhsVector = PeviousResidual;
+					}
+				}
+				//solver.LinearSystem.RhsVector.Clear(); //TODO Ger Temporary fix add watch
+				provider.Reset();
 
 
                 //TODO Ger: or the disposable solver sould be create here 
@@ -234,11 +242,12 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
             #region update of free converged displacements vectors
             uInitialFreeDOFDisplacementsPerSubdomain = microAnalyzer.GetConvergedSolutionVectorsOfFreeDofs();// ousiastika to u pou twra taftizetai me to uPlusuu
-            #endregion
+			PeviousResidual = solver.LinearSystem.RhsVector.Copy();
+			#endregion
 
 
-            #region INTEGRATION stresses 
-            IGlobalVector du = microAnalyzer.GetConvergedIncrementalSolutionVectorsOfFreeDofs();
+			#region INTEGRATION stresses 
+			IGlobalVector du = microAnalyzer.GetConvergedIncrementalSolutionVectorsOfFreeDofs();
             var boundaryNodesIds = boundaryNodes.Keys.ToList();
             Dictionary<int, double[]> FppReactionVectorSubdomains = GenericSubdomainCalculationsMultiple<TMatrix>.CalculateFppReactionsVectorSubdomains(model, elementProvider, scaleTransitions, boundaryNodes, boundaryNodesIds,
                 uInitialFreeDOFDisplacementsPerSubdomain, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, increments, increments, globalAlgebraicModel);

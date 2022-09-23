@@ -1,4 +1,4 @@
-﻿using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.Providers;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -19,9 +19,11 @@ namespace MGroup.MSolve.MultiscaleAnalysis
     /// </summary>
     public abstract class StructuralProblemsMicrostructureBase
     {
-        public int SolverData { get; set; }
+		internal IGlobalVector PeviousResidual {  get;  set; }
+		public int SolverData { get; set; }
 
-        public virtual Dictionary<int, IElementType> GetBoundaryFiniteElementsDictionaryOfSingleSubdomainModel(IModel model, Dictionary<int, Node> boundaryNodes)
+		
+		public virtual Dictionary<int, IElementType> GetBoundaryFiniteElementsDictionaryOfSingleSubdomainModel(IModel model, Dictionary<int, Node> boundaryNodes)
         {
             Dictionary<int, IElementType> boundaryElements = new Dictionary<int, IElementType>();
 

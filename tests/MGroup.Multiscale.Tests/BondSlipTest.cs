@@ -91,9 +91,9 @@ namespace MGroup.Multiscale.Tests
 		}
 
 		public static bool AreDisplacementsSame(double[,] expectedValues,
-			double[,] computedValues)
+			double[,] computedValues, double tol=1E-8)
 		{
-			var comparer = new ValueComparer(1E-8);
+			var comparer = new ValueComparer(tol);
 			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
 			{
 				for (int i2 = 0; i2 < expectedValues.GetLength(1); i2++)
