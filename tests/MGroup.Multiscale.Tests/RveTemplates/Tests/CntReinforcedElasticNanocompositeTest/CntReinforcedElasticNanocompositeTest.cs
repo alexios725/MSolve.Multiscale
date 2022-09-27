@@ -19,42 +19,25 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 
 	public class CntReinforcedElasticNanocompositeTest
 	{
+
 		[Fact]
-		public static void CheckCntReinforcedElasticNanocompositeExample()
-		{
-			var homogeneousRveBuilder1 = new CntReinforcedElasticNanocomposite(10);
-
-			IContinuumMaterial3D microstructure = new Microstructure3D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce());
-
-			double[,] consCheck1 = new double[6, 6];
-			for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure.ConstitutiveMatrix[i1, i2]; } }
-
-			double[] stresses = microstructure.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.05, 0, 0, 0, 0, 0, 0, 0, 0 });
-			double[] stressesCheck1 = stresses;
-			microstructure.CreateState();
-
-			stresses = microstructure.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.10, 0, 0, 0, 0, 0, 0, 0, 0 });
-			double[] stressesCheck2 = stresses;
-			var matrix1 = Matrix.CreateZero(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { matrix1[i1, i2] = microstructure.ConstitutiveMatrix[i1, i2]; } }
-
-		}
-
 		public static void GenerateRVEwithCNTsSolutions2()
 		{
-			LinearAlgebra.LibrarySettings.LinearAlgebraProviders = LinearAlgebra.LinearAlgebraProviderChoice.MKL;
+			//LinearAlgebra.LibrarySettings.LinearAlgebraProviders = LinearAlgebra.LinearAlgebraProviderChoice.MKL;
 
-			var BasePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-			var SpecPath = @"MsolveOutputs\matlabGeneratedCNTs\RVE Solutions";
-			var pathName = Path.Combine(BasePath, SpecPath);
+			//var BasePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+			//var SpecPath = @"MsolveOutputs\matlabGeneratedCNTs\RVE Solutions";
+			//var pathName = Path.Combine(BasePath, SpecPath);
+			var SpecPath = "..\\..\\RveTemplates\\Input\\Output_Input Files";
 
 			string InputFileName = "Input data.txt";
 			string InputExtension = Path.GetExtension(InputFileName);
-			string InputfileNameOnly = Path.Combine(pathName, Path.GetFileNameWithoutExtension(InputFileName));
+			string InputfileNameOnly = Path.Combine(SpecPath, Path.GetFileNameWithoutExtension(InputFileName));
 			string inputFile = string.Format("{0}{1}", InputfileNameOnly, InputExtension);
 
 			string OutputFileName = "Output data.txt";
 			string OutputExtension = Path.GetExtension(OutputFileName);
-			string OutputfileNameOnly = Path.Combine(pathName, Path.GetFileNameWithoutExtension(OutputFileName));
+			string OutputfileNameOnly = Path.Combine(SpecPath, Path.GetFileNameWithoutExtension(OutputFileName));
 			string outputFile = string.Format("{0}{1}", OutputfileNameOnly, OutputExtension);
 
 			bool append = false;
@@ -88,6 +71,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 			{
 				var maxstrain = 0.1;
 				var MacroStrain = new double[6] { maxstrain, -0.2 * maxstrain, -0.2 * maxstrain, 0.0, 0.0, 0.0 };
+				//var MacroStrain = new double[6] { maxstrain, -0.2 * maxstrain, -0.2 * maxstrain, 0.05 * maxstrain, 0.05 * maxstrain, -0.05 * maxstrain };
 				//var MacroStrain = new double[6]
 				//{
 				//0.00018213976876302329,
@@ -118,13 +102,19 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 				//homogeneousRveBuilder1.T_max = trandom.ContinuousUniform(0.001, 0.2);
 
 				//homogeneousRveBuilder1.UpdateCohesiveMaterial();
-
+				var IncrMacroStrainPrevious = new double[6];
 				microstructure3 = new Microstructure3D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce());
 				for (int i = 0; i < increments_per_solution; i++)
 				{
 					var IncrMacroStrain = new double[6];
-					for (int ii = 0; ii < 6; ii++) { IncrMacroStrain[ii] = MacroStrain[ii] / increments_per_solution; }
+					for (int ii = 0; ii < 6; ii++)
+					{
+						IncrMacroStrain[ii] = IncrMacroStrainPrevious[ii] + (MacroStrain[ii] / increments_per_solution);
+						IncrMacroStrainPrevious[ii] = IncrMacroStrain[ii];
+					}
+
 					//{ IncrMacroStrain[ii] = MacroStrain[ii] * (i + 1) / increments_per_solution; }
+					var constitutive = microstructure3.ConstitutiveMatrix;
 					double[] stresses = microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { IncrMacroStrain[0], IncrMacroStrain[1], IncrMacroStrain[2], IncrMacroStrain[3], IncrMacroStrain[4], IncrMacroStrain[5] });
 					//Debug.WriteLine($"Strain {IncrMacroStrain[0]},{IncrMacroStrain[1]},{IncrMacroStrain[2]},{IncrMacroStrain[3]},{IncrMacroStrain[4]},{IncrMacroStrain[5]}");
 					//microstructure3.UpdateMaterial(new double[6] { MacroStrain[0], MacroStrain[1], MacroStrain[2], MacroStrain[3], MacroStrain[4], MacroStrain[5] });

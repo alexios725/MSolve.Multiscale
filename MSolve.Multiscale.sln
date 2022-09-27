@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29409.12
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGroup.Multiscale", "src\MGroup.Multiscale\MGroup.Multiscale.csproj", "{8AB89C5A-FEA1-44C8-976D-BF4FA32093E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Multiscale", "src\MGroup.Multiscale\MGroup.Multiscale.csproj", "{8AB89C5A-FEA1-44C8-976D-BF4FA32093E0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B221D8F6-5364-44B0-83F2-7E92AB0364D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{83CF2434-8E1E-42FD-82E2-34986498DFD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGroup.Multiscale.Tests", "tests\MGroup.Multiscale.Tests\MGroup.Multiscale.Tests.csproj", "{402FD20B-51FD-4A87-B56E-75C7C97460C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Multiscale.Tests", "tests\MGroup.Multiscale.Tests\MGroup.Multiscale.Tests.csproj", "{402FD20B-51FD-4A87-B56E-75C7C97460C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

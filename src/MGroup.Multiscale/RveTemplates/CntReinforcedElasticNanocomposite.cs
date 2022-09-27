@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+
+using ISAAR.MSolve.FEM.Elements;
+using ISAAR.MSolve.FEM.Embedding;
 //using ISAAR.MSolve.Discretization;
 //using ISAAR.MSolve.Discretization.FreedomDegrees;
 //using ISAAR.MSolve.Discretization.Integration.Quadratures;
@@ -33,6 +38,7 @@ using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
 using MGroup.MSolve.Numerics.Integration.Quadratures;
+using MGroup.MSolve.Numerics.Interpolation;
 
 //using Troschuetz.Random;
 
@@ -170,7 +176,7 @@ namespace MGroup.Stochastic
 			//.Where(x => x.Key < hostElements).Select(kv => kv.Value).ToArray(), model.ElementsDictionary.Where(x => x.Key >= hostElements)
 			//.Select(kv => kv.Value).ToArray(), true);
 			AddCohesiveBeamElements(model, cntNodeIds, cntNodeCoords, cntElementConnectivity);
-			var embeddedGrouping = EmbeddedGrouping.CreateCohesive(model, model.ElementsDictionary
+			var embeddedGrouping = EmbeddedBeam3DGrouping.CreateCohesive(model, model.ElementsDictionary
 						.Where(x => x.Key < hostElements).Select(kv => kv.Value).ToArray(), model.ElementsDictionary.Where(x => x.Key >= hostElements + embeddedElements)
 						.Select(kv => kv.Value).ToArray(), true);
 
@@ -324,23 +330,31 @@ namespace MGroup.Stochastic
 				elementNodesBeam.Add(model.NodesDictionary[cntElementConnectivity[i, 0]]);
 				elementNodesBeam.Add(model.NodesDictionary[cntElementConnectivity[i, 1]]);
 
-				var cohesiveElement = new Element()
+				List<INode> nodeSet = new List<INode>()
 				{
-					ID = elementID,
-					//ElementType = new Beam3DCorotationalQuaternion(elementNodesClone, CntMaterial, 7.85, beamSection),
-					ElementType = new CohesiveBeam3DToBeam3D(cohesiveMaterial, GaussLegendre1D.GetQuadratureWithOrder(2), elementNodesBeam,
-					elementNodesClone, matrixMaterial, 1, beamSection, CntPerimeter)
+					model.NodesDictionary[node1 - embeddedNodes],
+					model.NodesDictionary[node2 - embeddedNodes],
+					model.NodesDictionary[node1],
+					model.NodesDictionary[node2]
 				};
+				IElementType cohesiveElement = new CohesiveBeam3DToBeam3D(nodeSet, cohesiveMaterial, GaussLegendre1D.GetQuadratureWithOrder(2), elementNodesBeam, elementNodesClone, matrixMaterial, 1, beamSection, CntPerimeter);
+				cohesiveElement.ID = elementID;
+				//{
+				//	ID = elementID,
+				//	//ElementType = new Beam3DCorotationalQuaternion(elementNodesClone, CntMaterial, 7.85, beamSection),
+				//	ElementType = new CohesiveBeam3DToBeam3D(cohesiveMaterial, GaussLegendre1D.GetQuadratureWithOrder(2), elementNodesBeam,
+				//	elementNodesClone, matrixMaterial, 1, beamSection, CntPerimeter)
+				//};
 
 				// Add beam element to the element and subdomains dictionary of the model
 				model.ElementsDictionary.Add(cohesiveElement.ID, cohesiveElement);
 				// Add Cohesive Element Nodes (!)
-				model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node1 - embeddedNodes]);
-				model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node2 - embeddedNodes]);
-				model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node1]);
-				model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node2]);
+				//model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node1 - embeddedNodes]);
+				//model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node2 - embeddedNodes]);
+				//model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node1]);
+				//model.ElementsDictionary[cohesiveElement.ID].AddNode(model.NodesDictionary[node2]);
 				// Add Cohesive Element in Subdomain
-				model.SubdomainsDictionary[0].Elements.Add(cohesiveElement.ID, cohesiveElement);
+				model.SubdomainsDictionary[0].Elements.Add(cohesiveElement);
 			}
 		}
 
@@ -348,13 +362,14 @@ namespace MGroup.Stochastic
 		{
 			if (readFromText == false)
 			{
-				var cntNodeIds = new int[numberOfCnts * 2];
-				var cntNodeCoordinates = new double[numberOfCnts * 2, 3];
-				var cntElementConnectivity = new int[numberOfCnts, 2];
+				//var cntNodeIds = new int[numberOfCnts * 2];
+				//var cntNodeCoordinates = new double[numberOfCnts * 2, 3];
+				//var cntElementConnectivity = new int[numberOfCnts, 2];
 
-				var cntGenerator = new RandomCntGeometryGenerator(1, cntLength, numberOfCnts, L01, L02, L03, hexa1, hexa2, hexa3);
-				(cntNodeIds, cntNodeCoordinates, cntElementConnectivity) = cntGenerator.GenerateCnts();
-				return (cntNodeIds, cntNodeCoordinates, cntElementConnectivity);
+				//var cntGenerator = new RandomCntGeometryGenerator(1, cntLength, numberOfCnts, L01, L02, L03, hexa1, hexa2, hexa3);
+				//(cntNodeIds, cntNodeCoordinates, cntElementConnectivity) = cntGenerator.GenerateCnts();
+				//return (cntNodeIds, cntNodeCoordinates, cntElementConnectivity);
+				return (new int[5], new double[5, 5], new int[5, 5]);
 			}
 			else
 			{
@@ -362,16 +377,16 @@ namespace MGroup.Stochastic
 				var cntNodeCoordinates = new double[numberOfCnts * 2, 3];
 				var cntElementConnectivity = new int[numberOfCnts, 2];
 
-				var BasePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-				var SpecPath = @"MsolveOutputs\matlabGeneratedCNTs";
-				var workingDirectory = Path.Combine(BasePath, SpecPath);
+				//var BasePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+				var SpecPath = "..\\..\\RveTemplates\\Input\\Output_Input Files";
+				//var workingDirectory = Path.Combine(BasePath, SpecPath);
 				//string workingDirectory = @"C:\Users\stefp\OneDrive\Desktop\MsolveOutputs\matlabGeneratedCNTs";
 
 				string CNTgeometryFileName = "nodes.txt";
 				string CNTconnectivityFileName = "connectivity.txt";
 
-				string fileNameOnlyCNTgeometryFileName = Path.Combine(workingDirectory, Path.GetFileNameWithoutExtension(CNTgeometryFileName));
-				string fileNameOnlyCNTconnectivityFileName = Path.Combine(workingDirectory, Path.GetFileNameWithoutExtension(CNTconnectivityFileName));
+				string fileNameOnlyCNTgeometryFileName = Path.Combine(SpecPath, Path.GetFileNameWithoutExtension(CNTgeometryFileName));
+				string fileNameOnlyCNTconnectivityFileName = Path.Combine(SpecPath, Path.GetFileNameWithoutExtension(CNTconnectivityFileName));
 				string extension = Path.GetExtension(CNTgeometryFileName);
 				string extension_2 = Path.GetExtension(CNTconnectivityFileName);
 
@@ -388,6 +403,10 @@ namespace MGroup.Stochastic
 				// Geometry
 				using (TextReader reader = File.OpenText(currentCNTgeometryFileName))
 				{
+					string CultureName = Thread.CurrentThread.CurrentCulture.Name;
+					CultureInfo ci = new CultureInfo(CultureName);
+					ci.NumberFormat.NumberDecimalSeparator = ".";
+					Thread.CurrentThread.CurrentCulture = ci;
 					for (int i = 0; i < CNTNodes; i++)
 					{
 						string text = reader.ReadLine();
@@ -428,24 +447,35 @@ namespace MGroup.Stochastic
 				model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 			}
 
-			var renumbering = new int[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+			var renumbering = new int[] { 6, 7, 4, 5, 2, 3, 0, 1 };
 			//var renumbering = new int[] { 0, 3, 2, 1, 4, 7, 6, 5 };
 			//var renumbering = new int[] { 6, 7, 4, 5, 2, 3, 0, 1 };
+			//var renumbering = new int[] { 0, 1, 2, 3, 4, 5, 6, 7 };
 			for (int i1 = 0; i1 < elementConnectivity.GetLength(0); i1++)
 			{
 				List<INode> nodeSet = new List<INode>();
 				for (int j = 0; j < 8; j++)
 				{
-					int nodeID = elementConnectivity[i1, j];
+					int nodeID = elementConnectivity[i1, renumbering[j]];
 					nodeSet.Add(model.NodesDictionary[nodeID]);
 				}
+				List<IIsotropicContinuumMaterial3D> matrixMaterialList = new List<IIsotropicContinuumMaterial3D>(); ;
+				for (int i = 0; i < GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2).IntegrationPoints.Count; i++)
+				{
+					matrixMaterialList.Add(matrixMaterial);
+				}
+				IReadOnlyList<IIsotropicContinuumMaterial3D> matrixMaterialReadOnly = (IReadOnlyList<IIsotropicContinuumMaterial3D>)matrixMaterialList;
 
+
+				var interpolation = InterpolationHexa8.UniqueInstance;
+				
 				//var elementType = new Hexa8Fixed(matrixMaterial);
 				//elementType.ismaterialfromNN = true;
 				//var trandom = new TRandom();
 				//var el = trandom.ContinuousUniform(0, 1);
-				var elementFactory = new ContinuumElement3DFactory(matrixMaterial, commonDynamicProperties: null);
-				IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, nodeSet);
+				//var elementFactory = new ContinuumElement3DFactory(matrixMaterial, commonDynamicProperties: null);
+				//IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, nodeSet);
+				IElementType e1 = new Multiscale.SupportiveClasses.ContinuumElement3D(nodeSet, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2), matrixMaterialReadOnly, interpolation);
 				e1.ID = i1;
 				//var e1 = new Element()
 				//            {
@@ -596,7 +626,7 @@ namespace MGroup.Stochastic
 			for (int i = 0; i < numberOfCnts; i++)
 			{
 				int elementID = i + (hostElements + embeddedElements);
-				model.ElementsDictionary[elementID].ElementType = new CohesiveBeam3DToBeam3D(cohesiveMaterial, GaussLegendre1D.GetQuadratureWithOrder(2), elementNodesBeam,
+				model.ElementsDictionary[elementID] = new CohesiveBeam3DToBeam3D((List<INode>)model.ElementsDictionary[elementID].Nodes, (ICohesiveZoneMaterial)cohesiveMaterial, GaussLegendre1D.GetQuadratureWithOrder(2), elementNodesBeam,
 				elementNodesClone, matrixMaterial, 1, beamSection, CntPerimeter);
 			}
 		}

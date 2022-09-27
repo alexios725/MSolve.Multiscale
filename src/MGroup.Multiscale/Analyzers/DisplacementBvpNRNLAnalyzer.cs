@@ -19,6 +19,7 @@ using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MiMsolve.intermediateCodeDevelopmentClasses;
 using MGroup.Constitutive.Structural.Providers;
 using System.Linq;
+using MGroup.MSolve.DataStructures;
 
 namespace MiMsolve.multiScaleSupportiveClasses
 {
@@ -141,7 +142,9 @@ namespace MiMsolve.multiScaleSupportiveClasses
             set { throw new InvalidOperationException("Newton-Raphson analyzer cannot contain an embedded analyzer."); }
         }
 
-        public void InitializeInternalVectors()//TODOMaria: this is probably where the initial internal nodal vector is calculated
+		public GenericAnalyzerState CurrentState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+		public void InitializeInternalVectors()//TODOMaria: this is probably where the initial internal nodal vector is calculated
         {
             globalRhs = algebraicModel.CreateZeroVector(); 
             rhs.Clear();
@@ -428,6 +431,9 @@ namespace MiMsolve.multiScaleSupportiveClasses
             // and it is used when it is recalculated in CalculateInternalRHS......
         }
 
-        #endregion
-    }
+		public GenericAnalyzerState CreateState() => throw new NotImplementedException();
+		IHaveState ICreateState.CreateState() => throw new NotImplementedException();
+
+		#endregion
+	}
 }

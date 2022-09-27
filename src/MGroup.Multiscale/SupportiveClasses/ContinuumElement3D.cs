@@ -407,16 +407,34 @@ namespace MGroup.Multiscale.SupportiveClasses
 			for (int i = 0; i < points.Length; i++) embeddedNode.Coordinates.Add(points[i]);
 			return embeddedNode;
 		}
+		//public EmbeddedNode BuildHostElementEmbeddedNode(IElementType element, INode node,
+		//	IEmbeddedDOFInHostTransformationVector transformation)
+		//{
+		//	var points = GetNaturalCoordinates(element, (Node)node);
+		//	if (points.Length == 0) return null;
 
-		public (double[] shapeFunctions, Matrix shapeFunctionGradients, IsoparametricJacobian3D jacobian) GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
-		{
-			var naturalPoint = new NaturalPoint(node.Coordinates.ToArray());
-			var shapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
-			var shapeFunctionGradients = Interpolation.EvaluateNaturalGradientsAt(naturalPoint);
-			var jacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), shapeFunctionGradients);
+		//	//element.EmbeddedNodes.Add(node);
+		//	var embeddedNode = new EmbeddedNode(node, element, (IList<IDofType>)transformation.GetDOFTypesOfHost((EmbeddedNode)node));
+		//	for (int i = 0; i < points.Length; i++) embeddedNode.Coordinates.Add(points[i]);
+		//	return embeddedNode;
+		//}
 
-			return (shapeFunctions, shapeFunctionGradients, jacobian);
-		}
+		//public (double[] shapeFunctions, Matrix shapeFunctionGradients, IsoparametricJacobian3D jacobian) GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
+		//{
+		//	var naturalPoint = new NaturalPoint(node.Coordinates.ToArray());
+		//	var shapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
+		//	var shapeFunctionGradients = Interpolation.EvaluateNaturalGradientsAt(naturalPoint);
+		//	var jacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), shapeFunctionGradients);
+		//	var shapeFunctionGradients2DArray = shapeFunctionGradients.CopyToArray2D();
+
+		//	var jacobianDirect = jacobian.DirectMatrix;
+		//	var jacobianInverse = jacobian.InverseMatrix;
+		//	var jacobianDirect2DArray = jacobianDirect.CopyToArray2D();
+		//	var jacobianInverse2DArray = jacobianInverse.CopyToArray2D();
+
+
+		//	return (shapeFunctions, shapeFunctionGradients, jacobian);
+		//}
 
 		private double[] GetNaturalCoordinates(IElementType element, Node node)
 		{
@@ -495,23 +513,14 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 			double[] auxH8ShapeFunctiondata = new double[8]; // Warning: shape function data not in hexa8fixed order.
 
-			//auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
-
-			auxH8ShapeFunctiondata[0] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[1] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[2] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[3] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[4] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[5] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[6] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[7] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
+			auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
+			auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
+			auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
+			auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
+			auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
+			auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
+			auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
+			auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
 			return auxH8ShapeFunctiondata;
 		}
 
@@ -532,12 +541,48 @@ namespace MGroup.Multiscale.SupportiveClasses
 			const double fSq125 = 0.35355339059327376220042218105242;
 			double[] auxilliaryfaDS = new double[24];
 
-			//double fXiP = (1.0 + fXi) * fSq125;
-			//double fEtaP = (1.0 + fEta) * fSq125;
-			//double fZetaP = (1.0 + fZeta) * fSq125;
-			//double fXiM = (1.0 - fXi) * fSq125;
-			//double fEtaM = (1.0 - fEta) * fSq125;
-			//double fZetaM = (1.0 - fZeta) * fSq125;
+			double auxilliaryfXiP = (1.0 + fXi) * fSq125;
+			double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
+			double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
+			double auxilliaryfXiM = (1.0 - fXi) * fSq125;
+			double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
+			double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
+
+			//auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
+			//auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
+			//auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
+			//auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
+			//auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
+			//auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
+			//auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
+			//auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
+
+			auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
+			auxilliaryfaDS[1] = -auxilliaryfEtaP * auxilliaryfZetaP;
+			auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
+			auxilliaryfaDS[3] = auxilliaryfEtaM * auxilliaryfZetaP;
+			auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
+			auxilliaryfaDS[5] = -auxilliaryfEtaP * auxilliaryfZetaM;
+			auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
+			auxilliaryfaDS[7] = auxilliaryfEtaM * auxilliaryfZetaM;
+
+			auxilliaryfaDS[8] = auxilliaryfXiP * auxilliaryfZetaP;
+			auxilliaryfaDS[9] = auxilliaryfXiM * auxilliaryfZetaP;
+			auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
+			auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
+			auxilliaryfaDS[12] = auxilliaryfXiP * auxilliaryfZetaM;
+			auxilliaryfaDS[13] = auxilliaryfXiM * auxilliaryfZetaM;
+			auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
+			auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
+
+			auxilliaryfaDS[16] = auxilliaryfXiP * auxilliaryfEtaP;
+			auxilliaryfaDS[17] = auxilliaryfXiM * auxilliaryfEtaP;
+			auxilliaryfaDS[18] = auxilliaryfXiM * auxilliaryfEtaM;
+			auxilliaryfaDS[19] = auxilliaryfXiP * auxilliaryfEtaM;
+			auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
+			auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
+			auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
+			auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
 
 
 			//auxilliaryfaDS[0] = -fXiP * fEtaP;
@@ -572,42 +617,42 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//auxilliaryfaDS[22] = -fEtaM * fZetaP;
 			//auxilliaryfaDS[23] = fEtaM * fZetaP;
 
-			double auxilliaryfXiP = (1.0 + fXi) * fSq125;
-			double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
-			double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
-			double auxilliaryfXiM = (1.0 - fXi) * fSq125;
-			double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
-			double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
+			//double auxilliaryfXiP = (1.0 + fXi) * fSq125;
+			//double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
+			//double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
+			//double auxilliaryfXiM = (1.0 - fXi) * fSq125;
+			//double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
+			//double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
 
 
-			auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
-			auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
-			auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
-			auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
-			auxilliaryfaDS[7] = -auxilliaryfaDS[6];
-			auxilliaryfaDS[5] = -auxilliaryfaDS[4];
-			auxilliaryfaDS[3] = -auxilliaryfaDS[2];
-			auxilliaryfaDS[1] = -auxilliaryfaDS[0];
+			//auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
+			//auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
+			//auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
+			//auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
+			//auxilliaryfaDS[7] = -auxilliaryfaDS[6];
+			//auxilliaryfaDS[5] = -auxilliaryfaDS[4];
+			//auxilliaryfaDS[3] = -auxilliaryfaDS[2];
+			//auxilliaryfaDS[1] = -auxilliaryfaDS[0];
 
 
-			auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
-			auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
-			auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
-			auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
-			auxilliaryfaDS[12] = -auxilliaryfaDS[15];
-			auxilliaryfaDS[13] = -auxilliaryfaDS[14];
-			auxilliaryfaDS[8] = -auxilliaryfaDS[11];
-			auxilliaryfaDS[9] = -auxilliaryfaDS[10];
+			//auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
+			//auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
+			//auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
+			//auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
+			//auxilliaryfaDS[12] = -auxilliaryfaDS[15];
+			//auxilliaryfaDS[13] = -auxilliaryfaDS[14];
+			//auxilliaryfaDS[8] = -auxilliaryfaDS[11];
+			//auxilliaryfaDS[9] = -auxilliaryfaDS[10];
 
 
-			auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
-			auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
-			auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
-			auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
-			auxilliaryfaDS[18] = -auxilliaryfaDS[22];
-			auxilliaryfaDS[19] = -auxilliaryfaDS[23];
-			auxilliaryfaDS[16] = -auxilliaryfaDS[20];
-			auxilliaryfaDS[17] = -auxilliaryfaDS[21];
+			//auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
+			//auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
+			//auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
+			//auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
+			//auxilliaryfaDS[18] = -auxilliaryfaDS[22];
+			//auxilliaryfaDS[19] = -auxilliaryfaDS[23];
+			//auxilliaryfaDS[16] = -auxilliaryfaDS[20];
+			//auxilliaryfaDS[17] = -auxilliaryfaDS[21];
 			return auxilliaryfaDS;
 		}
 
