@@ -194,23 +194,52 @@ namespace MGroup.MSolve.Discretization.Embedding
 		}
 
 
+		//public IReadOnlyList<IReadOnlyList<IDofType>> GetDofTypesForMatrixAssembly(IElementType element)
+		//{
+		//	//return element.ElementType.GetElementDOFTypes(element);
+
+		//	var dofs = new List<IReadOnlyList<IDofType>>();
+		//	INode currentNode = null;
+		//	List<IDofType> nodeDOFs = null;
+
+		//	foreach (var superElement in superElementMap)
+		//	{
+		//		INode node = superElement.Key.HostNode == null ? superElement.Key.EmbeddedNode : superElement.Key.HostNode;
+
+		//		if (currentNode != node)
+		//		{
+		//			if (nodeDOFs != null)
+		//				dofs.Add(nodeDOFs);
+		//			currentNode = node;
+		//			nodeDOFs = new List<IDofType>();
+		//		}
+		//		nodeDOFs.Add(superElement.Key.DOF);
+		//	}
+		//	if (nodeDOFs != null)
+		//		dofs.Add(nodeDOFs);
+
+		//	return dofs;
+		//}
+
 		public IReadOnlyList<IReadOnlyList<IDofType>> GetDofTypesForMatrixAssembly(IElementType element)
 		{
 			//return element.ElementType.GetElementDOFTypes(element);
 
 			var dofs = new List<IReadOnlyList<IDofType>>();
 			INode currentNode = null;
+			INode currentEmbeddedNode = null;
 			List<IDofType> nodeDOFs = null;
 
 			foreach (var superElement in superElementMap)
 			{
 				INode node = superElement.Key.HostNode == null ? superElement.Key.EmbeddedNode : superElement.Key.HostNode;
-
-				if (currentNode != node)
+				INode embeddedNode = superElement.Key.EmbeddedNode;
+				if (currentNode != node || currentEmbeddedNode != embeddedNode)
 				{
 					if (nodeDOFs != null)
 						dofs.Add(nodeDOFs);
 					currentNode = node;
+					currentEmbeddedNode = embeddedNode;
 					nodeDOFs = new List<IDofType>();
 				}
 				nodeDOFs.Add(superElement.Key.DOF);
@@ -262,26 +291,55 @@ namespace MGroup.MSolve.Discretization.Embedding
 			return dofs;
 		}
 
+		//public IReadOnlyList<INode> GetNodesForMatrixAssembly(IElementType element)
+		//{
+		//	var nodes = new List<INode>();
+		//	INode currentNode = null;
+		//	foreach (var superElement in superElementMap)
+		//	{
+		//		INode node = superElement.Key.HostNode == null ? superElement.Key.EmbeddedNode : superElement.Key.HostNode;
+		//		if (currentNode != node)
+		//		{
+		//			if (currentNode != null)
+		//				nodes.Add(currentNode);
+		//			currentNode = node;
+		//		}
+		//		//if (nodes.IndexOf(node) < 0)
+		//		//    nodes.Add(node);
+		//	}
+		//	if (currentNode != null)
+		//		nodes.Add(currentNode);
+
+		//	return nodes;
+		//}
+
 		public IReadOnlyList<INode> GetNodesForMatrixAssembly(IElementType element)
 		{
 			var nodes = new List<INode>();
 			INode currentNode = null;
+			INode currentEmbeddedNode = null;
 			foreach (var superElement in superElementMap)
 			{
 				INode node = superElement.Key.HostNode == null ? superElement.Key.EmbeddedNode : superElement.Key.HostNode;
-				if (currentNode != node)
+				INode embeddedNode = superElement.Key.EmbeddedNode;
+				if (currentNode != node || currentEmbeddedNode != embeddedNode)
 				{
 					if (currentNode != null)
+					{
 						nodes.Add(currentNode);
+					}
 					currentNode = node;
+					currentEmbeddedNode = embeddedNode;
 				}
 				//if (nodes.IndexOf(node) < 0)
-				//    nodes.Add(node);
+				//	nodes.Add(node);
 			}
 			if (currentNode != null)
 				nodes.Add(currentNode);
 
 			return nodes;
 		}
+
+
 	}
 }

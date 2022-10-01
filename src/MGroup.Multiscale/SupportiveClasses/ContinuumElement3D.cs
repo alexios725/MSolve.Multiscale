@@ -214,8 +214,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int numberOfDofs = 3 * Nodes.Count;
 			var Forces = Vector.CreateZero(numberOfDofs);
 			IReadOnlyList<Matrix> shapeGradientsNatural =
-				Interpolation.EvaluateNaturalGradientsAtGaussPoints(QuadratureForStiffness);
-
+				Interpolation.EvaluateNaturalGradientsAtGaussPoints(QuadratureForStiffness);	
 			//double[] strains = new double[6];
 			//for (int gp = 0; gp < QuadratureForStiffness.IntegrationPoints.Count; ++gp)
 			//{

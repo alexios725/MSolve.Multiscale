@@ -114,7 +114,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 					}
 
 					//{ IncrMacroStrain[ii] = MacroStrain[ii] * (i + 1) / increments_per_solution; }
-					var constitutive = microstructure3.ConstitutiveMatrix;
+					//var constitutive = microstructure3.ConstitutiveMatrix;
 					double[] stresses = microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { IncrMacroStrain[0], IncrMacroStrain[1], IncrMacroStrain[2], IncrMacroStrain[3], IncrMacroStrain[4], IncrMacroStrain[5] });
 					//Debug.WriteLine($"Strain {IncrMacroStrain[0]},{IncrMacroStrain[1]},{IncrMacroStrain[2]},{IncrMacroStrain[3]},{IncrMacroStrain[4]},{IncrMacroStrain[5]}");
 					//microstructure3.UpdateMaterial(new double[6] { MacroStrain[0], MacroStrain[1], MacroStrain[2], MacroStrain[3], MacroStrain[4], MacroStrain[5] });

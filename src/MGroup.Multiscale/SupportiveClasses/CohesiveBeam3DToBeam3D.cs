@@ -373,22 +373,32 @@ namespace ISAAR.MSolve.FEM.Elements
 
         public Tuple<double[], double[]> /*CalculateStresses*/CalculateResponse(/*IElementType element, */double[] localTotalDisplacementsSuperElement/*, double[] localdDisplacementsSuperElement*/)
         {
+			if (this.localDisplacements == null)
+			{
+				this.localDisplacements = new double[localTotalDisplacementsSuperElement.Length];
+			}
+			double[] localdDisplacementsSuperElement = new double[this.localDisplacements.Length];
+			
+			for (int i = 0; i < this.localDisplacements.Length; i++)
+			{
+				localdDisplacementsSuperElement[i] = localTotalDisplacementsSuperElement[i] - this.localDisplacements[i];
+			}
 			this.localDisplacements = localTotalDisplacementsSuperElement;
             double[][] Delta = new double[nGaussPoints][];
             double[] localTotalDisplacements = dofEnumerator.GetTransformedDisplacementsVector(localTotalDisplacementsSuperElement);
-            //double[] localTotaldDisplacements = dofEnumerator.GetTransformedDisplacementsVector(localdDisplacementsSuperElement);
-            //double[] localTotaldDisplacements_beam = new double[12];
-            //double[] localTotaldDisplacements_clone = new double[12];
+			double[] localTotaldDisplacements = dofEnumerator.GetTransformedDisplacementsVector(localdDisplacementsSuperElement);
+			double[] localTotaldDisplacements_beam = new double[12];
+			double[] localTotaldDisplacements_clone = new double[12];
 
-            //for (int i1 = 0; i1 < 12; i1++)
-            //{
-            //    localTotaldDisplacements_beam[i1] = localTotaldDisplacements[12 + i1];
-            //    localTotaldDisplacements_clone[i1] = localTotaldDisplacements[i1];
-            //}
+			for (int i1 = 0; i1 < 12; i1++)
+			{
+				localTotaldDisplacements_beam[i1] = localTotaldDisplacements[12 + i1];
+				localTotaldDisplacements_clone[i1] = localTotaldDisplacements[i1];
+			}
 
-            //supportive_beam.CalculateStresses(localTotaldDisplacements_beam);
-            //supportive_clone.CalculateStresses(localTotaldDisplacements_clone);
-            Delta = this.UpdateCoordinateDataAndCalculateDisplacementVector(localTotalDisplacements);
+			supportive_beam.CalculateStresses(localTotaldDisplacements_beam);
+			supportive_clone.CalculateStresses(localTotaldDisplacements_clone);
+			Delta = this.UpdateCoordinateDataAndCalculateDisplacementVector(localTotalDisplacements);
 			
 			double[][] tractions = new double[materialsAtGaussPoints.Length][];
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)
