@@ -271,7 +271,8 @@ namespace MGroup.Stochastic
 					model.NodesDictionary[cntElementConnectivity[i, 0]],
 					model.NodesDictionary[cntElementConnectivity[i, 1]]
 				};
-				var CntMaterial = (ElasticMaterial3D)this.CntMaterial;
+				var cntMaterialClone = (ElasticMaterial3D)this.CntMaterial;
+				var CntMaterial = new ElasticMaterial3D(cntMaterialClone.YoungModulus, cntMaterialClone.PoissonRatio);
 				IElementType beam_1 = new Beam3DCorotationalQuaternion(elementNodes, CntMaterial.YoungModulus, CntMaterial.PoissonRatio, 7.85, beamSection);
 				beam_1.ID = i + hostElements;
 				//var beamElement = new Element { ID = i + hostElements, ElementType = beam_1 };
@@ -459,10 +460,11 @@ namespace MGroup.Stochastic
 					int nodeID = elementConnectivity[i1, renumbering[j]];
 					nodeSet.Add(model.NodesDictionary[nodeID]);
 				}
+				var matrixMaterialClone = (ElasticMaterial3D)this.matrixMaterial;
 				List<IIsotropicContinuumMaterial3D> matrixMaterialList = new List<IIsotropicContinuumMaterial3D>(); ;
 				for (int i = 0; i < GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2).IntegrationPoints.Count; i++)
 				{
-					matrixMaterialList.Add(matrixMaterial);
+					matrixMaterialList.Add(new ElasticMaterial3D(matrixMaterialClone.YoungModulus, matrixMaterialClone.PoissonRatio));
 				}
 				IReadOnlyList<IIsotropicContinuumMaterial3D> matrixMaterialReadOnly = (IReadOnlyList<IIsotropicContinuumMaterial3D>)matrixMaterialList;
 

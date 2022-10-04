@@ -60,6 +60,7 @@ namespace ISAAR.MSolve.FEM.Elements
         public double[,] k_cohesive_element_total {get; private set;}
 		private double[][] tractions;
 		private double[] localDisplacements;
+		private double[] localDisplacementsLastConverged;
 		//protected CohesiveBeam3DToBeam3D()
 		//{
 		//}
@@ -377,11 +378,15 @@ namespace ISAAR.MSolve.FEM.Elements
 			{
 				this.localDisplacements = new double[localTotalDisplacementsSuperElement.Length];
 			}
+			if (localDisplacementsLastConverged == null)
+			{
+				localDisplacementsLastConverged = new double[localTotalDisplacementsSuperElement.Length];
+			}
 			double[] localdDisplacementsSuperElement = new double[this.localDisplacements.Length];
 			
 			for (int i = 0; i < this.localDisplacements.Length; i++)
 			{
-				localdDisplacementsSuperElement[i] = localTotalDisplacementsSuperElement[i] - this.localDisplacements[i];
+				localdDisplacementsSuperElement[i] = localTotalDisplacementsSuperElement[i] - localDisplacementsLastConverged[i];
 			}
 			this.localDisplacements = localTotalDisplacementsSuperElement;
             double[][] Delta = new double[nGaussPoints][];
@@ -628,6 +633,11 @@ namespace ISAAR.MSolve.FEM.Elements
 		public IMatrix DampingMatrix() => throw new NotImplementedException();
 		public void SaveConstitutiveLawState()
 		{
+			localDisplacementsLastConverged = new double[localDisplacements.Length];
+			for (int i = 0; i < localDisplacements.Length; i++)
+			{
+				localDisplacementsLastConverged[i] = localDisplacements[i];
+			}	
 			foreach (ICohesiveZoneMaterial m in materialsAtGaussPoints) m.CreateState();
 			supportive_beam.SaveMaterialState();
 			supportive_clone.SaveMaterialState();
