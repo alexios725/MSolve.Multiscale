@@ -83,16 +83,22 @@ namespace MGroup.Multiscale.Tests
 		[Fact]
 		public static void Check2DscaleTransitionsAndMicrostructure()
 		{
-			//Check05cStressIntegration()
-			double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stathera Poisson
-			var material1 = new ElasticMaterial2D(E_disp, ni_disp, StressState2D.PlaneStress);
-			double[] GLVec = new double[3] { 0.01, 0, 0 };
-			material1.UpdateConstitutiveMatrixAndEvaluateResponse(GLVec);
-			double[] stressesCheck1 = new double[3] { material1.Stresses[0], material1.Stresses[1], material1.Stresses[2] };
-			//material1.SaveState();
-			GLVec = new double[3] { 0.02, 0, 0 };
-			material1.UpdateConstitutiveMatrixAndEvaluateResponse(GLVec);
-			double[] stressesCheck2 = new double[3] { material1.Stresses[0], material1.Stresses[1], material1.Stresses[2] };
+			////Check05cStressIntegration()
+			//double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stathera Poisson
+			//var material1 = new ElasticMaterial2D(E_disp, ni_disp, StressState2D.PlaneStress);
+			//double[] GLVec = new double[3] { 0.01, 0, 0 };
+			//material1.UpdateConstitutiveMatrixAndEvaluateResponse(GLVec);
+			//double[] stressesCheck1 = new double[3] { material1.Stresses[0], material1.Stresses[1], material1.Stresses[2] };
+			////material1.SaveState();
+			//GLVec = new double[3] { 0.02, 0, 0 };
+			//material1.UpdateConstitutiveMatrixAndEvaluateResponse(GLVec);
+			//double[] stressesCheck2 = new double[3] { material1.Stresses[0], material1.Stresses[1], material1.Stresses[2] };
+
+
+
+			double[] stressesCheck1 = new double[] { 0.041666666666666671, 0.01666666666666667, 0 };
+			double[] stressesCheck2 = new double[] { 0.083333333333333343, 0.03333333333333334, 0 };
+			var consMatrix = Matrix.CreateFromArray(new double[,] { { 4.166666666666667, 1.666666666666667, 0 }, { 1.666666666666667, 4.166666666666667, 0 }, { 0, 0, 1.25 } });
 
 			//VectorExtensions.AssignTotalAffinityCount();
 			IdegenerateRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderLinearAndDegenerate();
@@ -118,8 +124,8 @@ namespace MGroup.Multiscale.Tests
 			Assert.True(AreDisplacementsSame(stressesCheck2, stressesCheck4));
 			Assert.True(AreDisplacementsSame(new double[3] { 3 * stressesCheck1[0], 3 * stressesCheck1[1], 3 * stressesCheck1[2] },
 																			stressesCheck5));
-			Assert.True(AreDisplacementsSame(consCheck1, material1.ConstitutiveMatrix));
-			Assert.True(AreDisplacementsSame(Matrix1.CopyToArray2D(), material1.ConstitutiveMatrix));
+			Assert.True(AreDisplacementsSame(consCheck1, consMatrix));
+			Assert.True(AreDisplacementsSame(Matrix1.CopyToArray2D(), consMatrix));
 		}
 
 		[Fact]

@@ -70,7 +70,8 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             matrices_not_initialized = false;
             tol = Math.Pow(10, -19);
             constitutiveMatrix = new double[3,3];
-        }
+			this.CalculateTransformationMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
+		}
 
         private GenericConstitutiveLawState currentState;
         public GenericConstitutiveLawState CurrentState
