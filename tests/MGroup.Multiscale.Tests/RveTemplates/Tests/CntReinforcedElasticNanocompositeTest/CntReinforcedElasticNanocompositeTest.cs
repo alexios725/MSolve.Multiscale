@@ -16,6 +16,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 	using MGroup.MSolve.MultiscaleAnalysis;
 	using MiMsolve.SolutionStrategies;
 	using System.IO;
+	using MGroup.LinearAlgebra.Commons;
 
 	public class CntReinforcedElasticNanocompositeTest
 	{
@@ -140,6 +141,33 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 					append = true;
 				}
 			}
+
+			double[][] expectedStresses =
+			{
+				new double[] { 0.114084979796056, 0.0505117120828458, 0.0504880927825645, -4.93933294792444E-05, -0.000208109197775651, -1.82646042480646E-05 },
+				new double[] { 0.227567405034224, 0.100787865230969, 0.101071577520994, -2.74541675661799E-05, -0.000394223946003412, 0.000424039268373175 },
+				new double[] { 0.343348543430872, 0.150912280313983, 0.150323829694954, -0.000231432098355594, -0.000297071304919592, -0.000574232847650175 },
+				new double[] { 0.4554310736263, 0.201244618073806, 0.201115119909942, -0.000227756203607088, -0.00049816369599425, -0.00010106368807711 },
+				new double[] { 0.568973804213001, 0.251542314867985, 0.251413101479795, -0.000290378764270461, -0.000595226143332466, -0.000119353161098844 }
+			};
+
+			Assert.True(AreStressesSame(expectedStresses, Output));
+		}
+
+		public static bool AreStressesSame(double[][] expectedValues, double[][] computedValues, double tol = 1E-9)
+		{
+			var comparer = new ValueComparer(tol);
+			for (int i1 = 0; i1 < expectedValues.Length; i1++)
+			{
+				for (int i2 = 0; i2 < expectedValues[i1].Length; i2++)
+				{
+					if (!comparer.AreEqual(expectedValues[i1][i2], computedValues[i1][i2]))
+					{
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 	}
 }

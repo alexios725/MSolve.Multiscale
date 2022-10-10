@@ -40,15 +40,17 @@ namespace MGroup.Multiscale.SupportiveClasses
 		private double[][] strainsVecLastConverged;
 		private double[][] lastStresses;
 
-		public ContinuumElement3D(IReadOnlyList<INode> nodes,
-			IQuadrature3D quadratureForStiffness, IReadOnlyList<IIsotropicContinuumMaterial3D> materialsAtGaussPoints, IIsoparametricInterpolation3D interpolation)
+		public ContinuumElement3D(IReadOnlyList<INode> nodes, IIsoparametricInterpolation3D interpolation,
+			IQuadrature3D quadratureForStiffness, IQuadrature3D quadratureForMass,
+			IGaussPointExtrapolation3D gaussPointExtrapolation,
+			IReadOnlyList<IContinuumMaterial3D> materialsAtGaussPoints, ITransientAnalysisProperties dynamicProperties)
 		{
 			this.dynamicProperties = dynamicProperties;
 			this.materialsAtGaussPoints = materialsAtGaussPoints;
-			//this.GaussPointExtrapolation = gaussPointExtrapolation;
+			this.GaussPointExtrapolation = gaussPointExtrapolation;
 			this.Nodes = nodes;
 			this.Interpolation = interpolation;
-			//this.QuadratureForConsistentMass = quadratureForMass;
+			this.QuadratureForConsistentMass = quadratureForMass;
 			this.QuadratureForStiffness = quadratureForStiffness;
 
 			dofTypes = new IDofType[nodes.Count][];
@@ -418,23 +420,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 		//	return embeddedNode;
 		//}
 
-		//public (double[] shapeFunctions, Matrix shapeFunctionGradients, IsoparametricJacobian3D jacobian) GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
-		//{
-		//	var naturalPoint = new NaturalPoint(node.Coordinates.ToArray());
-		//	var shapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
-		//	var shapeFunctionGradients = Interpolation.EvaluateNaturalGradientsAt(naturalPoint);
-		//	var jacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), shapeFunctionGradients);
-		//	var shapeFunctionGradients2DArray = shapeFunctionGradients.CopyToArray2D();
-
-		//	var jacobianDirect = jacobian.DirectMatrix;
-		//	var jacobianInverse = jacobian.InverseMatrix;
-		//	var jacobianDirect2DArray = jacobianDirect.CopyToArray2D();
-		//	var jacobianInverse2DArray = jacobianInverse.CopyToArray2D();
-
-
-		//	return (shapeFunctions, shapeFunctionGradients, jacobian);
-		//}
-
 		private double[] GetNaturalCoordinates(IElementType element, Node node)
 		{
 			double[] mins = new double[] { element.Nodes[0].X, element.Nodes[0].Y, element.Nodes[0].Z };
@@ -468,7 +453,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 			while (deltaNaturalCoordinatesNormSquare > toleranceSquare && iterations < maxIterations)
 			{
 				iterations++;
-				var shapeFunctions = CalcH8Shape(naturalCoordinates[0], naturalCoordinates[1], naturalCoordinates[2]);
+				//var shapeFunctions = CalcH8Shape(naturalCoordinates[0], naturalCoordinates[1], naturalCoordinates[2]);
+				var shapeFunctions = Interpolation.EvaluateFunctionsAt(new NaturalPoint(naturalCoordinates));
 				double[] coordinateDifferences = new double[] { 0, 0, 0 };
 				for (int i = 0; i < shapeFunctions.Length; i++)
 				{
@@ -481,8 +467,10 @@ namespace MGroup.Multiscale.SupportiveClasses
 				coordinateDifferences[2] = node.Z - coordinateDifferences[2];
 
 				double[,] faXYZ = GetCoordinatesTranspose(element);
-				double[] nablaShapeFunctions = CalcH8NablaShape(naturalCoordinates[0], naturalCoordinates[1], naturalCoordinates[2]);
-				var inverseJacobian = CalcH8JDetJ(faXYZ, nablaShapeFunctions).Item2;
+				//double[] nablaShapeFunctions = CalcH8NablaShape(naturalCoordinates[0], naturalCoordinates[1], naturalCoordinates[2]);
+				var nablaShapeFunctions = Interpolation.EvaluateNaturalGradientsAt(new NaturalPoint(naturalCoordinates));
+				//var inverseJacobian = CalcH8JDetJ(faXYZ, nablaShapeFunctions).Item2;
+				var inverseJacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), nablaShapeFunctions).InverseMatrix;
 
 				double[] deltaNaturalCoordinates = new double[] { 0, 0, 0 };
 				for (int i = 0; i < jacobianSize; i++)
@@ -500,28 +488,28 @@ namespace MGroup.Multiscale.SupportiveClasses
 			return naturalCoordinates.Count(x => Math.Abs(x) - 1.0 > tolerance) > 0 ? new double[0] : naturalCoordinates;
 		}
 
-		private double[] CalcH8Shape(double fXi, double fEta, double fZeta)
-		{
-			const double fSqC125 = 0.5;
-			double auxilliaryfXiP = (1.0 + fXi) * fSqC125;
-			double auxilliaryfEtaP = (1.0 + fEta) * fSqC125;
-			double auxilliaryfZetaP = (1.0 + fZeta) * fSqC125;
-			double auxilliaryfXiM = (1.0 - fXi) * fSqC125;
-			double auxilliaryfEtaM = (1.0 - fEta) * fSqC125;
-			double auxilliaryfZetaM = (1.0 - fZeta) * fSqC125;
+		//private double[] CalcH8Shape(double fXi, double fEta, double fZeta)
+		//{
+		//	const double fSqC125 = 0.5;
+		//	double auxilliaryfXiP = (1.0 + fXi) * fSqC125;
+		//	double auxilliaryfEtaP = (1.0 + fEta) * fSqC125;
+		//	double auxilliaryfZetaP = (1.0 + fZeta) * fSqC125;
+		//	double auxilliaryfXiM = (1.0 - fXi) * fSqC125;
+		//	double auxilliaryfEtaM = (1.0 - fEta) * fSqC125;
+		//	double auxilliaryfZetaM = (1.0 - fZeta) * fSqC125;
 
-			double[] auxH8ShapeFunctiondata = new double[8]; // Warning: shape function data not in hexa8fixed order.
+		//	double[] auxH8ShapeFunctiondata = new double[8]; // Warning: shape function data not in hexa8fixed order.
 
-			auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
-			auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
-			auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
-			return auxH8ShapeFunctiondata;
-		}
+		//	auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
+		//	auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
+		//	auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
+		//	auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
+		//	auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
+		//	auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
+		//	auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
+		//	auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
+		//	return auxH8ShapeFunctiondata;
+		//}
 
 		protected double[,] GetCoordinatesTranspose(IElementType element)
 		{
@@ -535,201 +523,171 @@ namespace MGroup.Multiscale.SupportiveClasses
 			return nodeCoordinatesXYZ;
 		}
 
-		private double[] CalcH8NablaShape(double fXi, double fEta, double fZeta)
-		{
-			const double fSq125 = 0.35355339059327376220042218105242;
-			double[] auxilliaryfaDS = new double[24];
+		//private double[] CalcH8NablaShape(double fXi, double fEta, double fZeta)
+		//{
+		//	const double fSq125 = 0.35355339059327376220042218105242;
+		//	double[] auxilliaryfaDS = new double[24];
 
-			double auxilliaryfXiP = (1.0 + fXi) * fSq125;
-			double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
-			double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
-			double auxilliaryfXiM = (1.0 - fXi) * fSq125;
-			double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
-			double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
+		//	double auxilliaryfXiP = (1.0 + fXi) * fSq125;
+		//	double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
+		//	double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
+		//	double auxilliaryfXiM = (1.0 - fXi) * fSq125;
+		//	double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
+		//	double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
 
-			//auxH8ShapeFunctiondata[0] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[1] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[2] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[3] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaP;
-			//auxH8ShapeFunctiondata[4] = auxilliaryfXiP * auxilliaryfEtaP * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[5] = auxilliaryfXiM * auxilliaryfEtaP * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[6] = auxilliaryfXiM * auxilliaryfEtaM * auxilliaryfZetaM;
-			//auxH8ShapeFunctiondata[7] = auxilliaryfXiP * auxilliaryfEtaM * auxilliaryfZetaM;
+		//	auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
+		//	auxilliaryfaDS[1] = -auxilliaryfEtaP * auxilliaryfZetaP;
+		//	auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
+		//	auxilliaryfaDS[3] = auxilliaryfEtaM * auxilliaryfZetaP;
+		//	auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
+		//	auxilliaryfaDS[5] = -auxilliaryfEtaP * auxilliaryfZetaM;
+		//	auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
+		//	auxilliaryfaDS[7] = auxilliaryfEtaM * auxilliaryfZetaM;
 
-			auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
-			auxilliaryfaDS[1] = -auxilliaryfEtaP * auxilliaryfZetaP;
-			auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
-			auxilliaryfaDS[3] = auxilliaryfEtaM * auxilliaryfZetaP;
-			auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
-			auxilliaryfaDS[5] = -auxilliaryfEtaP * auxilliaryfZetaM;
-			auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
-			auxilliaryfaDS[7] = auxilliaryfEtaM * auxilliaryfZetaM;
+		//	auxilliaryfaDS[8] = auxilliaryfXiP * auxilliaryfZetaP;
+		//	auxilliaryfaDS[9] = auxilliaryfXiM * auxilliaryfZetaP;
+		//	auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
+		//	auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
+		//	auxilliaryfaDS[12] = auxilliaryfXiP * auxilliaryfZetaM;
+		//	auxilliaryfaDS[13] = auxilliaryfXiM * auxilliaryfZetaM;
+		//	auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
+		//	auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
 
-			auxilliaryfaDS[8] = auxilliaryfXiP * auxilliaryfZetaP;
-			auxilliaryfaDS[9] = auxilliaryfXiM * auxilliaryfZetaP;
-			auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
-			auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
-			auxilliaryfaDS[12] = auxilliaryfXiP * auxilliaryfZetaM;
-			auxilliaryfaDS[13] = auxilliaryfXiM * auxilliaryfZetaM;
-			auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
-			auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
+		//	auxilliaryfaDS[16] = auxilliaryfXiP * auxilliaryfEtaP;
+		//	auxilliaryfaDS[17] = auxilliaryfXiM * auxilliaryfEtaP;
+		//	auxilliaryfaDS[18] = auxilliaryfXiM * auxilliaryfEtaM;
+		//	auxilliaryfaDS[19] = auxilliaryfXiP * auxilliaryfEtaM;
+		//	auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
+		//	auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
+		//	auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
+		//	auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
 
-			auxilliaryfaDS[16] = auxilliaryfXiP * auxilliaryfEtaP;
-			auxilliaryfaDS[17] = auxilliaryfXiM * auxilliaryfEtaP;
-			auxilliaryfaDS[18] = auxilliaryfXiM * auxilliaryfEtaM;
-			auxilliaryfaDS[19] = auxilliaryfXiP * auxilliaryfEtaM;
-			auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
-			auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
-			auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
-			auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
-
-
-			//auxilliaryfaDS[0] = -fXiP * fEtaP;
-			//auxilliaryfaDS[1] = -fXiM * fEtaP;
-			//auxilliaryfaDS[2] = fXiM * fEtaM;
-
-			//auxilliaryfaDS[3] = fXiP * fEtaM;
-			//auxilliaryfaDS[4] = fXiP * fEtaP;
-			//auxilliaryfaDS[5] = fXiM * fEtaP;
-
-			//auxilliaryfaDS[6] = -fXiM * fZetaP;
-			//auxilliaryfaDS[7] = -fXiP * fZetaP;
-			//auxilliaryfaDS[8] = fXiP * fZetaP;
-
-			//auxilliaryfaDS[9] = fXiM * fZetaP;
-			//auxilliaryfaDS[10] = -fXiM * fEtaM;
-			//auxilliaryfaDS[11] = -fXiP * fEtaM;
-
-			//auxilliaryfaDS[12] = fEtaP * fZetaP;
-			//auxilliaryfaDS[13] = -fEtaP * fZetaP;
-			//auxilliaryfaDS[14] = -fXiM * fZetaM;
-
-			//auxilliaryfaDS[15] = -fXiP * fZetaM;
-			//auxilliaryfaDS[16] = fXiP * fZetaM;
-			//auxilliaryfaDS[17] = fXiM * fZetaM;
-
-			//auxilliaryfaDS[18] = -fEtaM * fZetaM;
-			//auxilliaryfaDS[19] = fEtaM * fZetaM;
-			//auxilliaryfaDS[20] = fEtaP * fZetaM;
-
-			//auxilliaryfaDS[21] = -fEtaP * fZetaM;
-			//auxilliaryfaDS[22] = -fEtaM * fZetaP;
-			//auxilliaryfaDS[23] = fEtaM * fZetaP;
-
-			//double auxilliaryfXiP = (1.0 + fXi) * fSq125;
-			//double auxilliaryfEtaP = (1.0 + fEta) * fSq125;
-			//double auxilliaryfZetaP = (1.0 + fZeta) * fSq125;
-			//double auxilliaryfXiM = (1.0 - fXi) * fSq125;
-			//double auxilliaryfEtaM = (1.0 - fEta) * fSq125;
-			//double auxilliaryfZetaM = (1.0 - fZeta) * fSq125;
-
-
-			//auxilliaryfaDS[6] = -auxilliaryfEtaM * auxilliaryfZetaM;
-			//auxilliaryfaDS[4] = auxilliaryfEtaP * auxilliaryfZetaM;
-			//auxilliaryfaDS[2] = -auxilliaryfEtaM * auxilliaryfZetaP;
-			//auxilliaryfaDS[0] = auxilliaryfEtaP * auxilliaryfZetaP;
-			//auxilliaryfaDS[7] = -auxilliaryfaDS[6];
-			//auxilliaryfaDS[5] = -auxilliaryfaDS[4];
-			//auxilliaryfaDS[3] = -auxilliaryfaDS[2];
-			//auxilliaryfaDS[1] = -auxilliaryfaDS[0];
-
-
-			//auxilliaryfaDS[14] = -auxilliaryfXiM * auxilliaryfZetaM;
-			//auxilliaryfaDS[15] = -auxilliaryfXiP * auxilliaryfZetaM;
-			//auxilliaryfaDS[10] = -auxilliaryfXiM * auxilliaryfZetaP;
-			//auxilliaryfaDS[11] = -auxilliaryfXiP * auxilliaryfZetaP;
-			//auxilliaryfaDS[12] = -auxilliaryfaDS[15];
-			//auxilliaryfaDS[13] = -auxilliaryfaDS[14];
-			//auxilliaryfaDS[8] = -auxilliaryfaDS[11];
-			//auxilliaryfaDS[9] = -auxilliaryfaDS[10];
-
-
-			//auxilliaryfaDS[22] = -auxilliaryfXiM * auxilliaryfEtaM;
-			//auxilliaryfaDS[23] = -auxilliaryfXiP * auxilliaryfEtaM;
-			//auxilliaryfaDS[20] = -auxilliaryfXiP * auxilliaryfEtaP;
-			//auxilliaryfaDS[21] = -auxilliaryfXiM * auxilliaryfEtaP;
-			//auxilliaryfaDS[18] = -auxilliaryfaDS[22];
-			//auxilliaryfaDS[19] = -auxilliaryfaDS[23];
-			//auxilliaryfaDS[16] = -auxilliaryfaDS[20];
-			//auxilliaryfaDS[17] = -auxilliaryfaDS[21];
-			return auxilliaryfaDS;
-		}
+		//	return auxilliaryfaDS;
+		//}
 
 		protected static double determinantTolerance = 0.00000001;
-		private Tuple<double[,], double[,], double> CalcH8JDetJ(double[,] faXYZ, double[] faDS)
-		{
-			double[,] auxilliaryfaJ = new double[3, 3];
-			//auxilliaryfaJ[0, 0] = faDS[18] * faXYZ[0, 6] + faDS[19] * faXYZ[0, 7] + faDS[20] * faXYZ[0, 4] + faDS[21] * faXYZ[0, 5] + faDS[22] * faXYZ[0, 2] + faDS[23] * faXYZ[0, 3] + faDS[12] * faXYZ[0, 0] + faDS[13] * faXYZ[0, 1];
-			//auxilliaryfaJ[0, 1] = faDS[18] * faXYZ[1, 6] + faDS[19] * faXYZ[1, 7] + faDS[20] * faXYZ[1, 4] + faDS[21] * faXYZ[1, 5] + faDS[22] * faXYZ[1, 2] + faDS[23] * faXYZ[1, 3] + faDS[12] * faXYZ[1, 0] + faDS[13] * faXYZ[1, 1];
-			//auxilliaryfaJ[0, 2] = faDS[18] * faXYZ[2, 6] + faDS[19] * faXYZ[2, 7] + faDS[20] * faXYZ[2, 4] + faDS[21] * faXYZ[2, 5] + faDS[22] * faXYZ[2, 2] + faDS[23] * faXYZ[2, 3] + faDS[12] * faXYZ[2, 0] + faDS[13] * faXYZ[2, 1];
-			//auxilliaryfaJ[1, 0] = faDS[14] * faXYZ[0, 6] + faDS[15] * faXYZ[0, 7] + faDS[16] * faXYZ[0, 4] + faDS[17] * faXYZ[0, 5] + faDS[6] * faXYZ[0, 2] + faDS[7] * faXYZ[0, 3] + faDS[8] * faXYZ[0, 0] + faDS[9] * faXYZ[0, 1];
-			//auxilliaryfaJ[1, 1] = faDS[14] * faXYZ[1, 6] + faDS[15] * faXYZ[1, 7] + faDS[16] * faXYZ[1, 4] + faDS[17] * faXYZ[1, 5] + faDS[6] * faXYZ[1, 2] + faDS[7] * faXYZ[1, 3] + faDS[8] * faXYZ[1, 0] + faDS[9] * faXYZ[1, 1];
-			//auxilliaryfaJ[1, 2] = faDS[14] * faXYZ[2, 6] + faDS[15] * faXYZ[2, 7] + faDS[16] * faXYZ[2, 4] + faDS[17] * faXYZ[2, 5] + faDS[6] * faXYZ[2, 2] + faDS[7] * faXYZ[2, 3] + faDS[8] * faXYZ[2, 0] + faDS[9] * faXYZ[2, 1];
-			//auxilliaryfaJ[2, 0] = faDS[10] * faXYZ[0, 6] + faDS[11] * faXYZ[0, 7] + faDS[0] * faXYZ[0, 4] + faDS[1] * faXYZ[0, 5] + faDS[2] * faXYZ[0, 2] + faDS[3] * faXYZ[0, 3] + faDS[4] * faXYZ[0, 0] + faDS[5] * faXYZ[0, 1];
-			//auxilliaryfaJ[2, 1] = faDS[10] * faXYZ[1, 6] + faDS[11] * faXYZ[1, 7] + faDS[0] * faXYZ[1, 4] + faDS[1] * faXYZ[1, 5] + faDS[2] * faXYZ[1, 2] + faDS[3] * faXYZ[1, 3] + faDS[4] * faXYZ[1, 0] + faDS[5] * faXYZ[1, 1];
-			//auxilliaryfaJ[2, 2] = faDS[10] * faXYZ[2, 6] + faDS[11] * faXYZ[2, 7] + faDS[0] * faXYZ[2, 4] + faDS[1] * faXYZ[2, 5] + faDS[2] * faXYZ[2, 2] + faDS[3] * faXYZ[2, 3] + faDS[4] * faXYZ[2, 0] + faDS[5] * faXYZ[2, 1];
+		//private Tuple<double[,], double[,], double> CalcH8JDetJ(double[,] faXYZ, double[] faDS)
+		//{
+		//	double[,] auxilliaryfaJ = new double[3, 3];
+		//	auxilliaryfaJ[0, 0] = faDS[0] * faXYZ[0, 0] + faDS[1] * faXYZ[0, 1] + faDS[2] * faXYZ[0, 2] + faDS[3] * faXYZ[0, 3] + faDS[4] * faXYZ[0, 4] + faDS[5] * faXYZ[0, 5] + faDS[6] * faXYZ[0, 6] + faDS[7] * faXYZ[0, 7];
+		//	auxilliaryfaJ[0, 1] = faDS[0] * faXYZ[1, 0] + faDS[1] * faXYZ[1, 1] + faDS[2] * faXYZ[1, 2] + faDS[3] * faXYZ[1, 3] + faDS[4] * faXYZ[1, 4] + faDS[5] * faXYZ[1, 5] + faDS[6] * faXYZ[1, 6] + faDS[7] * faXYZ[1, 7];
+		//	auxilliaryfaJ[0, 2] = faDS[0] * faXYZ[2, 0] + faDS[1] * faXYZ[2, 1] + faDS[2] * faXYZ[2, 2] + faDS[3] * faXYZ[2, 3] + faDS[4] * faXYZ[2, 4] + faDS[5] * faXYZ[2, 5] + faDS[6] * faXYZ[2, 6] + faDS[7] * faXYZ[2, 7];
+		//	auxilliaryfaJ[1, 0] = faDS[8] * faXYZ[0, 0] + faDS[9] * faXYZ[0, 1] + faDS[10] * faXYZ[0, 2] + faDS[11] * faXYZ[0, 3] + faDS[12] * faXYZ[0, 4] + faDS[13] * faXYZ[0, 5] + faDS[14] * faXYZ[0, 6] + faDS[15] * faXYZ[0, 7];
+		//	auxilliaryfaJ[1, 1] = faDS[8] * faXYZ[1, 0] + faDS[9] * faXYZ[1, 1] + faDS[10] * faXYZ[1, 2] + faDS[11] * faXYZ[1, 3] + faDS[12] * faXYZ[1, 4] + faDS[13] * faXYZ[1, 5] + faDS[14] * faXYZ[1, 6] + faDS[15] * faXYZ[1, 7];
+		//	auxilliaryfaJ[1, 2] = faDS[8] * faXYZ[2, 0] + faDS[9] * faXYZ[2, 1] + faDS[10] * faXYZ[2, 2] + faDS[11] * faXYZ[2, 3] + faDS[12] * faXYZ[2, 4] + faDS[13] * faXYZ[2, 5] + faDS[14] * faXYZ[2, 6] + faDS[15] * faXYZ[2, 7];
+		//	auxilliaryfaJ[2, 0] = faDS[16] * faXYZ[0, 0] + faDS[17] * faXYZ[0, 1] + faDS[18] * faXYZ[0, 2] + faDS[19] * faXYZ[0, 3] + faDS[20] * faXYZ[0, 4] + faDS[21] * faXYZ[0, 5] + faDS[22] * faXYZ[0, 6] + faDS[23] * faXYZ[0, 7];
+		//	auxilliaryfaJ[2, 1] = faDS[16] * faXYZ[1, 0] + faDS[17] * faXYZ[1, 1] + faDS[18] * faXYZ[1, 2] + faDS[19] * faXYZ[1, 3] + faDS[20] * faXYZ[1, 4] + faDS[21] * faXYZ[1, 5] + faDS[22] * faXYZ[1, 6] + faDS[23] * faXYZ[1, 7];
+		//	auxilliaryfaJ[2, 2] = faDS[16] * faXYZ[2, 0] + faDS[17] * faXYZ[2, 1] + faDS[18] * faXYZ[2, 2] + faDS[19] * faXYZ[2, 3] + faDS[20] * faXYZ[2, 4] + faDS[21] * faXYZ[2, 5] + faDS[22] * faXYZ[2, 6] + faDS[23] * faXYZ[2, 7];
 
+		//	double auxilliaryfDet1 = auxilliaryfaJ[0, 0] * (auxilliaryfaJ[1, 1] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[1, 2]);
+		//	double auxilliaryfDet2 = -auxilliaryfaJ[0, 1] * (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 2]);
+		//	double auxilliaryfDet3 = auxilliaryfaJ[0, 2] * (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 1] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 1]);
+		//	double auxilliaryfDetJ = auxilliaryfDet1 + auxilliaryfDet2 + auxilliaryfDet3;
+		//	if (auxilliaryfDetJ < determinantTolerance)
+		//	{
+		//		throw new ArgumentException(
+		//			$"Jacobian determinant is negative or under tolerance ({auxilliaryfDetJ} < {determinantTolerance})."
+		//			 + " Check the order of nodes or the element geometry.");
+		//	}
 
-			auxilliaryfaJ[0, 0] = faDS[0] * faXYZ[0, 0] + faDS[1] * faXYZ[0, 1] + faDS[2] * faXYZ[0, 2] + faDS[3] * faXYZ[0, 3] + faDS[4] * faXYZ[0, 4] + faDS[5] * faXYZ[0, 5] + faDS[6] * faXYZ[0, 6] + faDS[7] * faXYZ[0, 7];
-			auxilliaryfaJ[0, 1] = faDS[0] * faXYZ[1, 0] + faDS[1] * faXYZ[1, 1] + faDS[2] * faXYZ[1, 2] + faDS[3] * faXYZ[1, 3] + faDS[4] * faXYZ[1, 4] + faDS[5] * faXYZ[1, 5] + faDS[6] * faXYZ[1, 6] + faDS[7] * faXYZ[1, 7];
-			auxilliaryfaJ[0, 2] = faDS[0] * faXYZ[2, 0] + faDS[1] * faXYZ[2, 1] + faDS[2] * faXYZ[2, 2] + faDS[3] * faXYZ[2, 3] + faDS[4] * faXYZ[2, 4] + faDS[5] * faXYZ[2, 5] + faDS[6] * faXYZ[2, 6] + faDS[7] * faXYZ[2, 7];
-			auxilliaryfaJ[1, 0] = faDS[8] * faXYZ[0, 0] + faDS[9] * faXYZ[0, 1] + faDS[10] * faXYZ[0, 2] + faDS[11] * faXYZ[0, 3] + faDS[12] * faXYZ[0, 4] + faDS[13] * faXYZ[0, 5] + faDS[14] * faXYZ[0, 6] + faDS[15] * faXYZ[0, 7];
-			auxilliaryfaJ[1, 1] = faDS[8] * faXYZ[1, 0] + faDS[9] * faXYZ[1, 1] + faDS[10] * faXYZ[1, 2] + faDS[11] * faXYZ[1, 3] + faDS[12] * faXYZ[1, 4] + faDS[13] * faXYZ[1, 5] + faDS[14] * faXYZ[1, 6] + faDS[15] * faXYZ[1, 7];
-			auxilliaryfaJ[1, 2] = faDS[8] * faXYZ[2, 0] + faDS[9] * faXYZ[2, 1] + faDS[10] * faXYZ[2, 2] + faDS[11] * faXYZ[2, 3] + faDS[12] * faXYZ[2, 4] + faDS[13] * faXYZ[2, 5] + faDS[14] * faXYZ[2, 6] + faDS[15] * faXYZ[2, 7];
-			auxilliaryfaJ[2, 0] = faDS[16] * faXYZ[0, 0] + faDS[17] * faXYZ[0, 1] + faDS[18] * faXYZ[0, 2] + faDS[19] * faXYZ[0, 3] + faDS[20] * faXYZ[0, 4] + faDS[21] * faXYZ[0, 5] + faDS[22] * faXYZ[0, 6] + faDS[23] * faXYZ[0, 7];
-			auxilliaryfaJ[2, 1] = faDS[16] * faXYZ[1, 0] + faDS[17] * faXYZ[1, 1] + faDS[18] * faXYZ[1, 2] + faDS[19] * faXYZ[1, 3] + faDS[20] * faXYZ[1, 4] + faDS[21] * faXYZ[1, 5] + faDS[22] * faXYZ[1, 6] + faDS[23] * faXYZ[1, 7];
-			auxilliaryfaJ[2, 2] = faDS[16] * faXYZ[2, 0] + faDS[17] * faXYZ[2, 1] + faDS[18] * faXYZ[2, 2] + faDS[19] * faXYZ[2, 3] + faDS[20] * faXYZ[2, 4] + faDS[21] * faXYZ[2, 5] + faDS[22] * faXYZ[2, 6] + faDS[23] * faXYZ[2, 7];
+		//	double auxilliaryfDetInv = 1.0 / auxilliaryfDetJ;
+		//	double[,] auxilliaryfaJInv = new double[3, 3];
+		//	auxilliaryfaJInv[0, 0] = (auxilliaryfaJ[1, 1] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[1, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[1, 0] = (auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 2] - auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[2, 0] = (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 1] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 1]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[0, 1] = (auxilliaryfaJ[2, 1] * auxilliaryfaJ[0, 2] - auxilliaryfaJ[0, 1] * auxilliaryfaJ[2, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[1, 1] = (auxilliaryfaJ[0, 0] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[0, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[2, 1] = (auxilliaryfaJ[2, 0] * auxilliaryfaJ[0, 1] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[0, 0]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[0, 2] = (auxilliaryfaJ[0, 1] * auxilliaryfaJ[1, 2] - auxilliaryfaJ[1, 1] * auxilliaryfaJ[0, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[1, 2] = (auxilliaryfaJ[1, 0] * auxilliaryfaJ[0, 2] - auxilliaryfaJ[0, 0] * auxilliaryfaJ[1, 2]) * auxilliaryfDetInv;
+		//	auxilliaryfaJInv[2, 2] = (auxilliaryfaJ[0, 0] * auxilliaryfaJ[1, 1] - auxilliaryfaJ[1, 0] * auxilliaryfaJ[0, 1]) * auxilliaryfDetInv;
 
-			double auxilliaryfDet1 = auxilliaryfaJ[0, 0] * (auxilliaryfaJ[1, 1] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[1, 2]);
-			double auxilliaryfDet2 = -auxilliaryfaJ[0, 1] * (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 2]);
-			double auxilliaryfDet3 = auxilliaryfaJ[0, 2] * (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 1] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 1]);
-			double auxilliaryfDetJ = auxilliaryfDet1 + auxilliaryfDet2 + auxilliaryfDet3;
-			if (auxilliaryfDetJ < determinantTolerance)
-			{
-				throw new ArgumentException(
-					$"Jacobian determinant is negative or under tolerance ({auxilliaryfDetJ} < {determinantTolerance})."
-					 + " Check the order of nodes or the element geometry.");
-			}
+		//	return new Tuple<double[,], double[,], double>(auxilliaryfaJ, auxilliaryfaJInv, auxilliaryfDetJ);
+		//}
 
-			double auxilliaryfDetInv = 1.0 / auxilliaryfDetJ;
-			double[,] auxilliaryfaJInv = new double[3, 3];
-			auxilliaryfaJInv[0, 0] = (auxilliaryfaJ[1, 1] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[1, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[1, 0] = (auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 2] - auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[2, 0] = (auxilliaryfaJ[1, 0] * auxilliaryfaJ[2, 1] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[1, 1]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[0, 1] = (auxilliaryfaJ[2, 1] * auxilliaryfaJ[0, 2] - auxilliaryfaJ[0, 1] * auxilliaryfaJ[2, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[1, 1] = (auxilliaryfaJ[0, 0] * auxilliaryfaJ[2, 2] - auxilliaryfaJ[2, 0] * auxilliaryfaJ[0, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[2, 1] = (auxilliaryfaJ[2, 0] * auxilliaryfaJ[0, 1] - auxilliaryfaJ[2, 1] * auxilliaryfaJ[0, 0]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[0, 2] = (auxilliaryfaJ[0, 1] * auxilliaryfaJ[1, 2] - auxilliaryfaJ[1, 1] * auxilliaryfaJ[0, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[1, 2] = (auxilliaryfaJ[1, 0] * auxilliaryfaJ[0, 2] - auxilliaryfaJ[0, 0] * auxilliaryfaJ[1, 2]) * auxilliaryfDetInv;
-			auxilliaryfaJInv[2, 2] = (auxilliaryfaJ[0, 0] * auxilliaryfaJ[1, 1] - auxilliaryfaJ[1, 0] * auxilliaryfaJ[0, 1]) * auxilliaryfDetInv;
+		//double[] IEmbeddedHostElement.GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
+		//{
+		//	double[,] elementCoordinates = GetCoordinatesTranspose(element);
+		//	var shapeFunctions = CalcH8Shape(node.Coordinates[0], node.Coordinates[1], node.Coordinates[2]);
+		//	var nablaShapeFunctions = CalcH8NablaShape(node.Coordinates[0], node.Coordinates[1], node.Coordinates[2]);
+		//	var jacobian = CalcH8JDetJ(elementCoordinates, nablaShapeFunctions);
 
-			return new Tuple<double[,], double[,], double>(auxilliaryfaJ, auxilliaryfaJInv, auxilliaryfDetJ);
-		}
+		//	return new double[]
+		//	{
+		//		shapeFunctions[0], shapeFunctions[1], shapeFunctions[2], shapeFunctions[3], shapeFunctions[4], shapeFunctions[5], shapeFunctions[6], shapeFunctions[7],
+		//		nablaShapeFunctions[0], nablaShapeFunctions[1], nablaShapeFunctions[2], nablaShapeFunctions[3], nablaShapeFunctions[4], nablaShapeFunctions[5], nablaShapeFunctions[6], nablaShapeFunctions[7],
+		//		nablaShapeFunctions[8], nablaShapeFunctions[9], nablaShapeFunctions[10], nablaShapeFunctions[11], nablaShapeFunctions[12], nablaShapeFunctions[13], nablaShapeFunctions[14], nablaShapeFunctions[15],
+		//		nablaShapeFunctions[16], nablaShapeFunctions[17], nablaShapeFunctions[18], nablaShapeFunctions[19], nablaShapeFunctions[20], nablaShapeFunctions[21], nablaShapeFunctions[22], nablaShapeFunctions[23],
+		//		jacobian.Item1[0, 0], jacobian.Item1[0, 1], jacobian.Item1[0, 2], jacobian.Item1[1, 0], jacobian.Item1[1, 1], jacobian.Item1[1, 2], jacobian.Item1[2, 0], jacobian.Item1[2, 1], jacobian.Item1[2, 2],
+		//		jacobian.Item2[0, 0], jacobian.Item2[0, 1], jacobian.Item2[0, 2], jacobian.Item2[1, 0], jacobian.Item2[1, 1], jacobian.Item2[1, 2], jacobian.Item2[2, 0], jacobian.Item2[2, 1], jacobian.Item2[2, 2]
+		//	};
+		//}
 
 		double[] IEmbeddedHostElement.GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
 		{
-			double[,] elementCoordinates = GetCoordinatesTranspose(element);
-			var shapeFunctions = CalcH8Shape(node.Coordinates[0], node.Coordinates[1], node.Coordinates[2]);
-			var nablaShapeFunctions = CalcH8NablaShape(node.Coordinates[0], node.Coordinates[1], node.Coordinates[2]);
-			var jacobian = CalcH8JDetJ(elementCoordinates, nablaShapeFunctions);
+			var naturalPoint = new NaturalPoint(node.Coordinates.ToArray());
+			var shapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
+			var shapeFunctionGradients = Interpolation.EvaluateNaturalGradientsAt(naturalPoint);
+			var jacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), shapeFunctionGradients);
 
-			return new double[]
-			//{
-			//	shapeFunctions[6], shapeFunctions[7], shapeFunctions[4], shapeFunctions[5], shapeFunctions[2], shapeFunctions[3], shapeFunctions[0], shapeFunctions[1],
-			//	nablaShapeFunctions[18], nablaShapeFunctions[19], nablaShapeFunctions[20], nablaShapeFunctions[21], nablaShapeFunctions[22], nablaShapeFunctions[23], nablaShapeFunctions[12], nablaShapeFunctions[13],
-			//	nablaShapeFunctions[14], nablaShapeFunctions[15], nablaShapeFunctions[16], nablaShapeFunctions[17], nablaShapeFunctions[6], nablaShapeFunctions[7], nablaShapeFunctions[8], nablaShapeFunctions[9],
-			//	nablaShapeFunctions[10], nablaShapeFunctions[11], nablaShapeFunctions[0], nablaShapeFunctions[1], nablaShapeFunctions[2], nablaShapeFunctions[3], nablaShapeFunctions[4], nablaShapeFunctions[5],
-			//	jacobian.Item1[0, 0], jacobian.Item1[0, 1], jacobian.Item1[0, 2], jacobian.Item1[1, 0], jacobian.Item1[1, 1], jacobian.Item1[1, 2], jacobian.Item1[2, 0], jacobian.Item1[2, 1], jacobian.Item1[2, 2],
-			//	jacobian.Item2[0, 0], jacobian.Item2[0, 1], jacobian.Item2[0, 2], jacobian.Item2[1, 0], jacobian.Item2[1, 1], jacobian.Item2[1, 2], jacobian.Item2[2, 0], jacobian.Item2[2, 1], jacobian.Item2[2, 2]
-			//};
+			var shapeFunctionGradients2DArray = shapeFunctionGradients.CopyToArray2D();
+			var shapeFunctionGradients1DArray = new double[shapeFunctionGradients2DArray.GetLength(0) * shapeFunctionGradients2DArray.GetLength(1)];
+			for (int j = 0; j < shapeFunctionGradients2DArray.GetLength(1); j++)
 			{
-				shapeFunctions[0], shapeFunctions[1], shapeFunctions[2], shapeFunctions[3], shapeFunctions[4], shapeFunctions[5], shapeFunctions[6], shapeFunctions[7],
-				nablaShapeFunctions[0], nablaShapeFunctions[1], nablaShapeFunctions[2], nablaShapeFunctions[3], nablaShapeFunctions[4], nablaShapeFunctions[5], nablaShapeFunctions[6], nablaShapeFunctions[7],
-				nablaShapeFunctions[8], nablaShapeFunctions[9], nablaShapeFunctions[10], nablaShapeFunctions[11], nablaShapeFunctions[12], nablaShapeFunctions[13], nablaShapeFunctions[14], nablaShapeFunctions[15],
-				nablaShapeFunctions[16], nablaShapeFunctions[17], nablaShapeFunctions[18], nablaShapeFunctions[19], nablaShapeFunctions[20], nablaShapeFunctions[21], nablaShapeFunctions[22], nablaShapeFunctions[23],
-				jacobian.Item1[0, 0], jacobian.Item1[0, 1], jacobian.Item1[0, 2], jacobian.Item1[1, 0], jacobian.Item1[1, 1], jacobian.Item1[1, 2], jacobian.Item1[2, 0], jacobian.Item1[2, 1], jacobian.Item1[2, 2],
-				jacobian.Item2[0, 0], jacobian.Item2[0, 1], jacobian.Item2[0, 2], jacobian.Item2[1, 0], jacobian.Item2[1, 1], jacobian.Item2[1, 2], jacobian.Item2[2, 0], jacobian.Item2[2, 1], jacobian.Item2[2, 2]
-			};
+				for (int i = 0; i < shapeFunctionGradients2DArray.GetLength(0); i++)
+				{
+					shapeFunctionGradients1DArray[(shapeFunctionGradients2DArray.GetLength(0) * j) + i] = shapeFunctionGradients2DArray[i, j];
+				}
+			}
+
+			var jacobianDirect2DArray = jacobian.DirectMatrix.CopyToArray2D();
+			var jacobianInverse2DArray = jacobian.InverseMatrix.CopyToArray2D();
+			var jacobianDirect1DArray = new double[jacobianDirect2DArray.GetLength(0) * jacobianDirect2DArray.GetLength(1)];
+			var jacobianInverse1DArray = new double[jacobianInverse2DArray.GetLength(0) * jacobianInverse2DArray.GetLength(1)];
+			for (int i = 0; i < jacobianDirect2DArray.GetLength(0); i++)
+			{
+				for (int j = 0; j < jacobianDirect2DArray.GetLength(1); j++)
+				{
+					jacobianDirect1DArray[(jacobianDirect2DArray.GetLength(1) * i) + j] = jacobianDirect2DArray[i, j];
+					jacobianInverse1DArray[(jacobianInverse2DArray.GetLength(1) * i) + j] = jacobianInverse2DArray[i, j];
+				}
+			}
+			var returnValueList = new List<double>();
+			foreach (double shapeFunction in shapeFunctions)
+			{
+				returnValueList.Add(shapeFunction);
+			}
+			foreach (double shapeFunctionGradient in shapeFunctionGradients1DArray)
+			{
+				returnValueList.Add(shapeFunctionGradient);
+			}
+			foreach (double value in jacobianDirect1DArray)
+			{
+				returnValueList.Add(value);
+			}
+			foreach (double value in jacobianInverse1DArray)
+			{
+				returnValueList.Add(value);
+			}
+
+			return returnValueList.ToArray();
 		}
+
+		//public (double[] shapeFunctions, Matrix shapeFunctionGradients, IsoparametricJacobian3D jacobian) GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
+		//{
+		//	var naturalPoint = new NaturalPoint(node.Coordinates.ToArray());
+		//	var shapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
+		//	var shapeFunctionGradients = Interpolation.EvaluateNaturalGradientsAt(naturalPoint);
+		//	var jacobian = new IsoparametricJacobian3D(element.Nodes.ToArray(), shapeFunctionGradients);
+		//	var shapeFunctionGradients2DArray = shapeFunctionGradients.CopyToArray2D();
+
+		//	var jacobianDirect = jacobian.DirectMatrix;
+		//	var jacobianInverse = jacobian.InverseMatrix;
+		//	var jacobianDirect2DArray = jacobianDirect.CopyToArray2D();
+		//	var jacobianInverse2DArray = jacobianInverse.CopyToArray2D();
+
+
+		//	return (shapeFunctions, shapeFunctionGradients, jacobian);
+		//}
 	}
 }

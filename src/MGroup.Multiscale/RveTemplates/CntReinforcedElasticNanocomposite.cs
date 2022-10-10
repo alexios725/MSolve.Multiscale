@@ -8,23 +8,6 @@ using System.Threading;
 
 using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Embedding;
-//using ISAAR.MSolve.Discretization;
-//using ISAAR.MSolve.Discretization.FreedomDegrees;
-//using ISAAR.MSolve.Discretization.Integration.Quadratures;
-//using ISAAR.MSolve.Discretization.Interfaces;
-//using ISAAR.MSolve.Discretization.Mesh;
-//using ISAAR.MSolve.FEM.Elements;
-//using ISAAR.MSolve.FEM.Elements.SupportiveClasses;
-//using ISAAR.MSolve.FEM.Embedding;
-//using ISAAR.MSolve.FEM.Entities;
-//using ISAAR.MSolve.FEM.Postprocessing;
-//using ISAAR.MSolve.LinearAlgebra.Matrices;
-//using ISAAR.MSolve.LinearAlgebra.Vectors;
-//using ISAAR.MSolve.Materials;
-//using ISAAR.MSolve.Materials.Interfaces;
-//using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
-//using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
-
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.BoundaryConditions;
 using MGroup.Constitutive.Structural.Cohesive;
@@ -461,46 +444,27 @@ namespace MGroup.Stochastic
 					nodeSet.Add(model.NodesDictionary[nodeID]);
 				}
 				var matrixMaterialClone = (ElasticMaterial3D)this.matrixMaterial;
-				List<IIsotropicContinuumMaterial3D> matrixMaterialList = new List<IIsotropicContinuumMaterial3D>(); ;
-				for (int i = 0; i < GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2).IntegrationPoints.Count; i++)
-				{
-					matrixMaterialList.Add(new ElasticMaterial3D(matrixMaterialClone.YoungModulus, matrixMaterialClone.PoissonRatio));
-				}
-				IReadOnlyList<IIsotropicContinuumMaterial3D> matrixMaterialReadOnly = (IReadOnlyList<IIsotropicContinuumMaterial3D>)matrixMaterialList;
+				//List<IIsotropicContinuumMaterial3D> matrixMaterialList = new List<IIsotropicContinuumMaterial3D>(); ;
+				//for (int i = 0; i < GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2).IntegrationPoints.Count; i++)
+				//{
+				//	matrixMaterialList.Add(new ElasticMaterial3D(matrixMaterialClone.YoungModulus, matrixMaterialClone.PoissonRatio));
+				//}
+				//IReadOnlyList<IIsotropicContinuumMaterial3D> matrixMaterialReadOnly = (IReadOnlyList<IIsotropicContinuumMaterial3D>)matrixMaterialList;
 
 
-				var interpolation = InterpolationHexa8.UniqueInstance;
-				
+				//var interpolation = InterpolationHexa8.UniqueInstance;
+
 				//var elementType = new Hexa8Fixed(matrixMaterial);
 				//elementType.ismaterialfromNN = true;
 				//var trandom = new TRandom();
 				//var el = trandom.ContinuousUniform(0, 1);
 				//var elementFactory = new ContinuumElement3DFactory(matrixMaterial, commonDynamicProperties: null);
 				//IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, nodeSet);
-				IElementType e1 = new Multiscale.SupportiveClasses.ContinuumElement3D(nodeSet, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2), matrixMaterialReadOnly, interpolation);
+				var elementFactory = new Multiscale.SupportiveClasses.ContinuumElement3DFactory(new ElasticMaterial3D(matrixMaterialClone.YoungModulus, matrixMaterialClone.PoissonRatio), commonDynamicProperties: null);
+				IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, nodeSet);
+				//IElementType e1 = new Multiscale.SupportiveClasses.ContinuumElement3D(nodeSet, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2), matrixMaterialReadOnly, interpolation);
 				e1.ID = i1;
-				//var e1 = new Element()
-				//            {
-				//                ID = i1,
-				//                //ElementType = elementType
-				//                ElementType = new Hexa8Fixed(matrixMaterial) { ID = i1 }
-				//                //ElementType = new Hexa8NonLinear(matrixMaterial, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
-				//            };
-				//if (el < 0)
-				//{
-				//    e1 = new Element()
-				//    {
-				//        ID = i1,
-				//        ElementType = new Hexa8Fixed(inclusionMaterial)
-				//        //ElementType = new Hexa8NonLinear(inclusionMaterial, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3))
-				//    };
-				//}
 
-				//for (int j = 0; j < 8; j++)
-				//{
-				//    int nodeID = elementConnectivity[i1, renumbering[j]];
-				//    e1.NodesDictionary.Add(nodeID, model.NodesDictionary[nodeID]);
-				//}
 				model.ElementsDictionary.Add(e1.ID, e1);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 			}

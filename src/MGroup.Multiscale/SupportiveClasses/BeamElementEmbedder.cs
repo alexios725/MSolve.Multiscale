@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using ISAAR.MSolve.FEM.Interfaces;
+//using ISAAR.MSolve.FEM.Interfaces;
 
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Embedding;
 using MGroup.MSolve.Discretization.Entities;
+using MGroup.Multiscale.SupportiveClasses;
 
 namespace ISAAR.MSolve.FEM.Embedding
 {
-	public class BeamElementEmbedder : ElementEmbedder
+	public class BeamElementEmbedder : BeamElementEmbedderBase
 	{
 		public BeamElementEmbedder(Model model, IElementType embeddedElement, IEmbeddedDOFInHostTransformationVector transformation)
 			: base(embeddedElement, transformation)

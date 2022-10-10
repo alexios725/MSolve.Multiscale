@@ -11,6 +11,8 @@ using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
 using MGroup.Multiscale.SupportiveClasses;
 
+using ContinuumElement3DFactory = MGroup.FEM.Structural.Continuum.ContinuumElement3DFactory;
+
 namespace MGroup.Multiscale.RveTemplatesPaper
 {
 
