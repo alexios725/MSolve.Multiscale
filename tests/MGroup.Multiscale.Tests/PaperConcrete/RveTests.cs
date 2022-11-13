@@ -51,7 +51,7 @@ using Xunit;
 
 //[assembly: SuppressXUnitOutputException]
 
-namespace ISAAR.MSolve.Tests
+namespace MGroup.Multiscale.Tests.PaperConcrete
 {
 	public class RveTests
 	{
