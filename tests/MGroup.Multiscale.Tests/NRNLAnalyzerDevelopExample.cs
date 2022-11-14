@@ -114,13 +114,12 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 			//}
 			parentAnalyzer.Initialize();
 			parentAnalyzer.Solve();
-			var uInitialFreeDOFs_state1 = childAnalyzer.GetConvergedSolutionVectorsOfFreeDofs().Copy();
 			var array_uInitialFreeDOFs_state1 = RetrieveDisplacementsOfFreeDofs(algebraicModel, uInitialFreeDOFDisplacementsPerSubdomain);
 			#endregion
 
 			#region save state and update structures and vectors for second increment
 
-			subdomainUpdaters.UpdateState();
+			subdomainUpdaters.UpdateState(parentAnalyzer.CurrentState);
 			
 			// u (or uplusDu) initial 
 			uInitialFreeDOFDisplacementsPerSubdomain = childAnalyzer.GetConvergedSolutionVectorsOfFreeDofs().Copy();// ousiastika to u pou twra taftizetai me to uPlusuu

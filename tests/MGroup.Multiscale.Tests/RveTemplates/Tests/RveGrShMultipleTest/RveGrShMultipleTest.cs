@@ -66,7 +66,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShMultipleTest
 
 			var problem = new ProblemStructural(model, algebraicModel, solver);
 			var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
-			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);
+			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, problem, linearAnalyzer);
 
 			var watchDofs = new List<(INode node, IDofType dof)>()
 			{

@@ -5,7 +5,6 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Multiscale.SupportiveClasses;
-using MGroup.Multiscale.Tests.ExampleModels;
 using MGroup.Multiscale.Tests.SeparationBenchmarks2;
 using MGroup.Solvers.AlgebraicModel;
 

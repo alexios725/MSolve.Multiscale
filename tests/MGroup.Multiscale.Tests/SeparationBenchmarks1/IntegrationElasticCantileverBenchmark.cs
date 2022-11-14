@@ -72,7 +72,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 			childAnalyzerBuilder.NumIterationsForMatrixRebuild = 1;
 			//childAnalyzerBuilder.SubdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.SubdomainsDictionary[subdomainID]) }; // This is the default
 			LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
-			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, provider, childAnalyzer);
+			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, provider, childAnalyzer);
 			var watchDofs = new Dictionary<int, int[]>();
 			watchDofs.Add(subdomainID, new int[5] { 0, 11, 23, 35, 47 });
 			var log1 = new TotalDisplacementsPerIterationLog(

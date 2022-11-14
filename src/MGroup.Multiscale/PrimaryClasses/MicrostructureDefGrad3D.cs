@@ -336,16 +336,16 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         public GenericConstitutiveLawState CreateState()//.1`
         {
             var subdomainUpdaters = new NonLinearModelUpdaterWithInitialConditions(globalAlgebraicModel);
-            subdomainUpdaters.UpdateState();
+            //subdomainUpdaters.UpdateState();
             //var subdomainUpdaters = new Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions>(1); 
             //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values){subdomainUpdaters.Add(subdomain.ID, new NonLinearSubdomainUpdaterWithInitialConditions(subdomain)); //v2.3}
             //foreach (var subdomainUpdater in subdomainUpdaters.Values){subdomainUpdater.UpdateState();}
 
             currentState = new GenericConstitutiveLawState(this, new (string, double)[0]); // TODO: an xreiazottan pote tetoia ulopoihsh tote tha itan to tupou  {(HARDENING_X, alpha[0]),(HARDENING_Y, alpha[1])}
-            //klp san to bondslip coesive materials kai ta eprepe na perilamvanei tou rve oles tis state variables dld kai ta materials kai tis free metakinhseis twn elements kai pitano contact klp kai ta uprescribed
-                
+																						   //klp san to bondslip coesive materials kai ta eprepe na perilamvanei tou rve oles tis state variables dld kai ta materials kai tis free metakinhseis twn elements kai pitano contact klp kai ta uprescribed
+			subdomainUpdaters.UpdateState(currentState);
 
-            return currentState;
+			return currentState;
 
 
         }

@@ -69,7 +69,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.HomogeneousRVEBuilderNonLin
 			};
 			var loadControlAnalyzer = loadControlAnalyzerBuilder.Build();
 
-			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, loadControlAnalyzer);
+			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, problem, loadControlAnalyzer);
 
 			staticAnalyzer.Initialize();
 			staticAnalyzer.Solve();

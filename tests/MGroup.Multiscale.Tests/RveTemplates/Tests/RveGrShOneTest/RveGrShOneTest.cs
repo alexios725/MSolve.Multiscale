@@ -64,7 +64,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShOneTest
 
 			var problem = new ProblemStructural(model, algebraicModel, solver);
 			var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
-			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);
+			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, problem, linearAnalyzer);
 
 			staticAnalyzer.Initialize();
 			staticAnalyzer.Solve();

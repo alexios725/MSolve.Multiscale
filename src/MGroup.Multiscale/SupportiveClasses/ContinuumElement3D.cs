@@ -17,6 +17,7 @@ using MGroup.MSolve.Geometry.Coordinates;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization.Embedding;
 using System.Linq;
+using MGroup.MSolve.DataStructures;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -672,6 +673,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 			return returnValueList.ToArray();
 		}
+
+		public void SaveConstitutiveLawState(IHaveState externalState) => SaveConstitutiveLawState();
 
 		//public (double[] shapeFunctions, Matrix shapeFunctionGradients, IsoparametricJacobian3D jacobian) GetShapeFunctionsForNode(IElementType element, EmbeddedNode node)
 		//{

@@ -10,6 +10,7 @@ using MGroup.MSolve.Numerics.Integration.Quadratures;
 using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization.Entities;
+using MGroup.MSolve.DataStructures;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -533,6 +534,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 		{
 			return StiffnessMatrix();
 		}
+
+		public void SaveConstitutiveLawState(IHaveState externalState) => SaveConstitutiveLawState();
 	}
 
 }

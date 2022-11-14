@@ -41,7 +41,9 @@ namespace MiMsolve.multiScaleSupportiveClasses
         public IAnalysisWorkflowLog[] Logs { get; set; }
 
         public IChildAnalyzer ChildAnalyzer { get; }
-		public GenericAnalyzerState CurrentState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public GenericAnalyzerState CurrentState { get => CreateState(); set => throw new NotImplementedException(); }
+
+		public IGlobalVector CurrentAnalysisResult => throw new NotImplementedException();
 
 		public void BuildMatrices()
         {
@@ -78,7 +80,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
             ChildAnalyzer.Solve();
         }
 
-		public GenericAnalyzerState CreateState() => throw new NotImplementedException();
+		public GenericAnalyzerState CreateState() => ChildAnalyzer.CurrentState;
 		IHaveState ICreateState.CreateState() => throw new NotImplementedException();
 	}
 }

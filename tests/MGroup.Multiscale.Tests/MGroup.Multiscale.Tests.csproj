@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MGroup.Constitutive.Structural" Version="0.2.0-unstable.16" />
-    <PackageReference Include="MGroup.FEM" Version="0.2.0-unstable.34" />
-    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.68" />
-    <PackageReference Include="MGroup.MSolve.Core" Version="0.2.0-unstable.46" />
+    <PackageReference Include="MGroup.Constitutive.Structural" Version="0.2.0-unstable.49" />
+    <PackageReference Include="MGroup.FEM" Version="0.2.0-unstable.53" />
+    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.72" />
+    <PackageReference Include="MGroup.MSolve.Core" Version="0.2.0-unstable.54" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />

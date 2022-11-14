@@ -22,6 +22,7 @@ using MGroup.Constitutive.Structural.Line;
 using MGroup.FEM.Structural.Line;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Embedding;
@@ -696,5 +697,7 @@ namespace ISAAR.MSolve.FEM.Elements
 			}
 			return N3;
 		}
+
+		public void SaveConstitutiveLawState(IHaveState externalState) => SaveConstitutiveLawState();
 	}
 }

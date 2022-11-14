@@ -89,7 +89,7 @@ namespace ISAAR.MSolve.SamplesConsole
 			};
 			//var subdomainUpdaters = new[] { new NonLinearModelUpdater(algebraicModel) }; // This is the default
 			LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
-            var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, provider, childAnalyzer);
+            var parentAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, provider, childAnalyzer);
 
 			// Output
 			//var watchDofs = new Dictionary<int, int[]>();

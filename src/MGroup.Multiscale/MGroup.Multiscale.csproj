@@ -5,14 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MGroup.Constitutive.Structural" Version="0.2.0-unstable.16" />
-    <PackageReference Include="MGroup.FEM" Version="0.2.0-unstable.34" />
-    <PackageReference Include="MGroup.FEM.Structural" Version="0.2.0-unstable.34" />
-    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.68" />
-    <PackageReference Include="MGroup.MSolve.Core" Version="0.2.0-unstable.46" />
-    <PackageReference Include="MGroup.NumericalAnalyzers" Version="0.2.0-unstable.10" />
-    <PackageReference Include="MGroup.NumericalAnalyzers.Discretization" Version="0.2.0-unstable.10" />
-    <PackageReference Include="MGroup.Solvers" Version="0.2.0-unstable.10" />
+    <PackageReference Include="MGroup.Constitutive.Structural" Version="0.2.0-unstable.49" />
+    <PackageReference Include="MGroup.FEM" Version="0.2.0-unstable.53" />
+    <PackageReference Include="MGroup.FEM.Structural" Version="0.2.0-unstable.53" />
+    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.72" />
+    <PackageReference Include="MGroup.MSolve.Core" Version="0.2.0-unstable.54" />
+    <PackageReference Include="MGroup.NumericalAnalyzers" Version="0.2.0-unstable.43" />
+    <PackageReference Include="MGroup.NumericalAnalyzers.Discretization" Version="0.2.0-unstable.43" />
+    <PackageReference Include="MGroup.Solvers" Version="0.2.0-unstable.14" />
   </ItemGroup>
 
 </Project>

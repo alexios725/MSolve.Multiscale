@@ -188,7 +188,7 @@ namespace ISAAR.MSolve.SamplesConsole
 			var childAnalyzer = childAnalyzerBuilder.Build();
 
 			// Choose parent analyzer -> Parent: Static
-			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, provider, childAnalyzer);
+			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel/*, solver*/, provider, childAnalyzer);
 
 			//// Request output
 			//childAnalyzer.Logs[subdomainID] = new LinearAnalyzerLogFactory(new int[] { 0 });

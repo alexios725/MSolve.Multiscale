@@ -142,7 +142,12 @@ namespace MiMsolve.multiScaleSupportiveClasses
             set { throw new InvalidOperationException("Newton-Raphson analyzer cannot contain an embedded analyzer."); }
         }
 
-		public GenericAnalyzerState CurrentState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		private GenericAnalyzerState currentState;
+		public GenericAnalyzerState CurrentState { get => currentState; set => throw new NotImplementedException(); }
+
+		public IGlobalVector CurrentAnalysisLinearSystemRhs => throw new NotImplementedException();
+
+		public IGlobalVector CurrentAnalysisResult => throw new NotImplementedException();
 
 		public void InitializeInternalVectors()//TODOMaria: this is probably where the initial internal nodal vector is calculated
         {
@@ -373,7 +378,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
         public void SaveMaterialState()
         {
-            subdomainUpdaters.UpdateState();
+            subdomainUpdaters.UpdateState(currentState);
         }
 
         public IGlobalVector GetConvergedSolutionVectorsOfFreeDofs()
